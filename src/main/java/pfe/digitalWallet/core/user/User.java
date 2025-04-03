@@ -27,9 +27,6 @@ public class User {
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
 
-
-    private LocalDateTime nnn;
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
 
