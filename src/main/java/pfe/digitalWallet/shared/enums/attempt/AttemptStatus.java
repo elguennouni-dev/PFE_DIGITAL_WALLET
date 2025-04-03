@@ -1,12 +1,12 @@
 package pfe.digitalWallet.shared.enums.attempt;
 
 public enum AttemptStatus {
-    Success, Failure;
+    SUCCESS, FAILURE;
 
     public String toString() {
         return switch (this){
-            case Success -> "Success";
-            case Failure -> "Failure";
+            case SUCCESS -> "Success";
+            case FAILURE -> "Failure";
         };
     }
 

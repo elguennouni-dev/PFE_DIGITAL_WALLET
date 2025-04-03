@@ -1,4 +1,9 @@
 package pfe.digitalWallet.configuration;
 
-public class SecurityConfig {
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+@Configuration
+public class SecurityConfig extends OncePerRequestFilter {
+
 }
