@@ -8,20 +8,21 @@ import pfe.digitalWallet.core.session.Session;
 
 import java.time.LocalDateTime;
 
-@Table(name = "qr_codes")
+@Table(name = "qr_code")
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class QRcode {
+public class QrCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long qr_code_id;
+    private Long id;
 
-    @JoinColumn(name = "session_id")
+    private String qrCodeData;
+    private LocalDateTime generatedAt;
+
+    @OneToOne
+    @JoinColumn(name = "session_id", nullable = false)
     private Session session;
-
-    private String qr_code_data;
-    private LocalDateTime generated_at;
 
 }

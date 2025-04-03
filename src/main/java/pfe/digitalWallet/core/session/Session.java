@@ -4,12 +4,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import pfe.digitalWallet.core.qrcode.QRcode;
+import pfe.digitalWallet.core.qrcode.QrCode;
+import pfe.digitalWallet.core.user.User;
 import pfe.digitalWallet.shared.enums.session.SessionStatus;
 
 import java.time.LocalDateTime;
 
-@Table(name = "sessions")
+@Table(name = "session")
 @Entity
 @Data
 @NoArgsConstructor
@@ -17,18 +18,20 @@ import java.time.LocalDateTime;
 public class Session {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long session_id;
+    private Long id;
+
+    private String sessionToken;
+    private SessionStatus sessionStatus;
+    private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private Long user_id;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    private String session_token;
-    private SessionStatus status;
-    private LocalDateTime created_at;
-    private LocalDateTime expires_at;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private QRcode qRcode;
-
+    @OneToOne(mappedBy = "session", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private QrCode qrCode;
 }

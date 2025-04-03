@@ -5,38 +5,40 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import pfe.digitalWallet.core.document.Document;
-import pfe.digitalWallet.core.logginattemnt.LogginAttempt;
-import pfe.digitalWallet.core.loginhistory.LogginHistory;
+import pfe.digitalWallet.core.loginattempt.LoginAttempt;
+import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.core.session.Session;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Table(name = "users")
+@Table(name = "app_user")
 @Entity
 @Data
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long user_id;
+    private Long id;
+
     private String username;
     private String password;
     private String email;
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "app_user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<LogginAttempt> loginAttempts = new ArrayList<>();
+    @OneToMany(mappedBy = "app_user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<LoginAttempt> loginAttempts = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "app_user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Document> documents = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<LogginHistory> loginHistories = new ArrayList<>();
+    @OneToMany(mappedBy = "app_user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<LoginHistory> loginHistories = new ArrayList<>();
 
 }

@@ -1,4 +1,4 @@
-package pfe.digitalWallet.core.logginattemnt;
+package pfe.digitalWallet.core.loginattempt;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,21 +9,23 @@ import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 
 import java.time.LocalDateTime;
 
-@Table(name = "loggin_attempts")
+@Table(name = "login_attempt")
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LogginAttempt {
+public class LoginAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long attempt_id;
+    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private LocalDateTime dateTime;
 
-    private LocalDateTime timestamp;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AttemptStatus status;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }
