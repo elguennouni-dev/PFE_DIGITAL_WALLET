@@ -1,6 +1,8 @@
 package pfe.digitalWallet.core.loginhistory;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,14 +21,32 @@ public class LoginHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Login History date-time cannot be Null")
+    @NotEmpty(message = "Login History date-time cannot be Empty")
+    @NotBlank(message = "Login History date-time cannot be Blank")
+    @PastOrPresent(message = "Login History date-time cannot be in the future")
     private LocalDateTime dateTime;
-    private String device;
+
+    @NotNull(message = "device cannot be Null")
+    @NotEmpty(message = "device cannot be Empty")
+    @NotBlank(message = "device cannot be Blank")
+    @Size(min = 2, message = "device must be at least 2 characters long")
+    private String device; // Suggested to send (No-Device-found)
+
+    @NotNull(message = "location cannot be Null")
+    @NotEmpty(message = "location cannot be Empty")
+    @NotBlank(message = "location cannot be Blank")
+    @Size(min = 2, message = "location must be at least 2 characters long") // Suggested to send (No-location-found)
     private String location;
 
+    @NotNull(message = "Login status status cannot be Null")
+    @NotEmpty(message = "Login status cannot be Empty")
+    @NotBlank(message = "Login status cannot be Blank")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginStatus loginStatus;
 
+    @Valid
     @ManyToOne
     @JoinColumn(name = "app_user_id", nullable = false)
     private AppUser appUser;
