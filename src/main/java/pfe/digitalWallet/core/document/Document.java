@@ -19,11 +19,15 @@ public class Document {
     private Long id;
 
     private String documentTitle;
-    private String documentFile;
+
     private String rsaKey;
     private LocalDateTime createdAt;
     private Long viewCount;
     private Long downloadCount;
+
+    @Lob
+    @Column(columnDefinition = "BYTEA")
+    private Byte[] documentFile;
 
     @ManyToOne
     @JoinColumn(name = "app_user_id", nullable = false)
