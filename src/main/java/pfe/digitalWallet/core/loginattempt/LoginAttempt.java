@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import pfe.digitalWallet.core.user.User;
+import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 
 import java.time.LocalDateTime;
@@ -23,9 +23,9 @@ public class LoginAttempt {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AttemptStatus status;
+    private AttemptStatus loginStatus;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "app_user_id", nullable = false)
+    private AppUser appUser;
 }

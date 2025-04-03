@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import pfe.digitalWallet.core.user.User;
+import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
 
 import java.time.LocalDateTime;
@@ -28,6 +28,6 @@ public class LoginHistory {
     private LoginStatus loginStatus;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "app_user_id", nullable = false)
+    private AppUser appUser;
 }
