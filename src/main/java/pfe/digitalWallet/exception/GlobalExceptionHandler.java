@@ -1,13 +1,21 @@
 package pfe.digitalWallet.exception;
 
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
+import java.nio.file.AccessDeniedException;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,18 +46,56 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex) {
+    @ExceptionHandler({
+            ConstraintViolationException.class,
+            DataIntegrityViolationException.class,
+            HttpMessageNotReadableException.class,
+            HttpRequestMethodNotSupportedException.class,
+            HttpMediaTypeNotSupportedException.class,
+            AccessDeniedException.class,
+            HttpClientErrorException.class,
+            HttpServerErrorException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleSpringWebAndUnusualExceptions(Exception ex) {
+        HttpStatus status;
+        String message;
+
+        if (ex instanceof ConstraintViolationException) {
+            status = HttpStatus.BAD_REQUEST;
+            message = "Constraint violation error";
+        } else if (ex instanceof DataIntegrityViolationException) {
+            status = HttpStatus.CONFLICT;
+            message = "Database constraint violated";
+        } else if (ex instanceof HttpMessageNotReadableException) {
+            status = HttpStatus.BAD_REQUEST;
+            message = "Malformed JSON request";
+        } else if (ex instanceof HttpRequestMethodNotSupportedException) {
+            status = HttpStatus.METHOD_NOT_ALLOWED;
+            message = "Request method not supported";
+        } else if (ex instanceof HttpMediaTypeNotSupportedException) {
+            status = HttpStatus.UNSUPPORTED_MEDIA_TYPE;
+            message = "Unsupported media type";
+        } else if (ex instanceof AccessDeniedException) {
+            status = HttpStatus.FORBIDDEN;
+            message = "Access denied";
+        } else if (ex instanceof HttpClientErrorException) {
+            status = HttpStatus.BAD_REQUEST;
+            message = "Client error";
+        } else if (ex instanceof HttpServerErrorException) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            message = "Server error";
+        } else {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            message = "An unexpected web error occurred.";
+        }
 
         Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("message", "An unexpected error occurred. Please try again later.");
+        errorResponse.put("message", message);
         errorResponse.put("cause", ex.getMessage());
         errorResponse.put("zonedatetime", ZonedDateTime.now().toString());
-        errorResponse.put("httpstatus", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        errorResponse.put("httpstatus", status.value());
 
-        // Return the response with status 500
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(errorResponse, status);
     }
 }
 
