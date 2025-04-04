@@ -27,8 +27,6 @@ public class QrCode {
     private String qrCodeData;
 
     @NotNull(message = "QRcode generation date-time cannot be Null")
-    @NotEmpty(message = "QRcode generation date-time cannot be Empty")
-    @NotBlank(message = "QRcode generation date-time cannot be Blank")
     @PastOrPresent(message = "QRcode generation date-time cannot be in the future")
     private LocalDateTime generatedAt;
 

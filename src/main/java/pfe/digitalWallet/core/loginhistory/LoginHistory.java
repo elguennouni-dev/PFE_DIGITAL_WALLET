@@ -22,8 +22,6 @@ public class LoginHistory {
     private Long id;
 
     @NotNull(message = "Login History date-time cannot be Null")
-    @NotEmpty(message = "Login History date-time cannot be Empty")
-    @NotBlank(message = "Login History date-time cannot be Blank")
     @PastOrPresent(message = "Login History date-time cannot be in the future")
     private LocalDateTime dateTime;
 
@@ -39,9 +37,7 @@ public class LoginHistory {
     @Size(min = 2, message = "location must be at least 2 characters long") // Suggested to send (No-location-found)
     private String location;
 
-    @NotNull(message = "Login status status cannot be Null")
-    @NotEmpty(message = "Login status cannot be Empty")
-    @NotBlank(message = "Login status cannot be Blank")
+    @NotNull(message = "Login status cannot be Null")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginStatus loginStatus;

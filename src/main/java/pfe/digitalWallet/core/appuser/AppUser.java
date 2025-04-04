@@ -38,15 +38,13 @@ public class AppUser {
     @Size(min = 8, max = 32, message = "Password must be between 8 and 32 characters")
     private String password;
 
-    @NotNull(message = "Password cannot be Null")
-    @NotEmpty(message = "Password cannot be Empty")
-    @NotBlank(message = "Password cannot be Blank")
+    @NotNull(message = "Email cannot be Null")
+    @NotEmpty(message = "Email cannot be Empty")
+    @NotBlank(message = "Email cannot be Blank")
     @Email(message = "Email should be valid")
     private String email;
 
     @NotNull(message = "Creation date-time cannot be Null")
-    @NotEmpty(message = "Creation date-time cannot be Empty")
-    @NotBlank(message = "Creation date-time cannot be Blank")
     @PastOrPresent(message = "Creation date-time cannot be in the future")
     private LocalDateTime createdAt;
 

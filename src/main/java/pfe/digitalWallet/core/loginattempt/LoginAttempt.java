@@ -25,14 +25,10 @@ public class LoginAttempt {
     private Long id;
 
     @NotNull(message = "Login attempt date-time cannot be Null")
-    @NotEmpty(message = "Login attempt date-time cannot be Empty")
-    @NotBlank(message = "Login attempt date-time cannot be Blank")
     @PastOrPresent(message = "Login attempt date-time cannot be in the future")
     private LocalDateTime dateTime;
 
     @NotNull(message = "Attempt status cannot be Null")
-    @NotEmpty(message = "Attempt status cannot be Empty")
-    @NotBlank(message = "Attempt status cannot be Blank")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AttemptStatus loginStatus;
