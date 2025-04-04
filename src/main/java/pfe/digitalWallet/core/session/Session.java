@@ -51,6 +51,6 @@ public class Session {
     private AppUser appUser;
 
     @Valid
-    @OneToOne(mappedBy = "session", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private QrCode qrCode;
 }
