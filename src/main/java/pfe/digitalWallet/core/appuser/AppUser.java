@@ -48,6 +48,11 @@ public class AppUser {
     @PastOrPresent(message = "Update date-time cannot be in the future")
     private LocalDateTime updatedAt;
 
+    @NotNull(message = "Token cannot be Null")
+    @NotEmpty(message = "Token cannot be Empty")
+    @NotBlank(message = "Token cannot be Blank")
+    private String token;
+
     @Valid
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();

@@ -21,10 +21,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<UserDto>> login(@RequestBody LoginRequest loginRequest) {
-        String username = loginRequest.getUsername();
-        String password = loginRequest.getPassword();
 
-        Optional<UserDto> userDtoOptional = authService.login(username, password);
+        Optional<UserDto> userDtoOptional = authService.login(loginRequest);
 
         if(userDtoOptional.isEmpty()) {
             return buildResponse(false, "Invalid username or password", null, HttpStatus.UNAUTHORIZED);
