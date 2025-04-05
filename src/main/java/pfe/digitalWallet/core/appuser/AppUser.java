@@ -45,8 +45,6 @@ public class AppUser {
     private LocalDateTime createdAt;
 
     @NotNull(message = "Update date-time cannot be Null")
-    @NotEmpty(message = "Update date-time cannot be Empty")
-    @NotBlank(message = "Update date-time cannot be Blank")
     @PastOrPresent(message = "Update date-time cannot be in the future")
     private LocalDateTime updatedAt;
 
