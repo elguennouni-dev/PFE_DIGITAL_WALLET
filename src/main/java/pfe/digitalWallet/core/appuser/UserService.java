@@ -13,17 +13,25 @@ public class UserService {
     @Autowired
     private UserRepository appUserRepository;
 
+
+    public Optional<List<AppUser>> getAll() {
+        List<AppUser> appUsers = appUserRepository.findAll();
+        return Optional.ofNullable(appUsers);
+    }
+
+    public Optional<AppUser> save(AppUser appUser) {
+        AppUser user = appUserRepository.save(appUser);
+        return Optional.of(user);
+    }
+
     public Optional<AppUser> findByUsername(String username) {
         AppUser user = appUserRepository.findByUsername(username);
         return Optional.ofNullable(user);
     }
 
-    public String getPasswordByUserId(Long id) {
-        AppUser appUser = appUserRepository.findById(id).orElse(null);
-        if(appUser == null) {
-            return null;
-        }
-        return appUser.getPassword();
+    public Optional<AppUser> findByEmail(String email) {
+        AppUser user = appUserRepository.findByEmail(email);
+        return Optional.ofNullable(user);
     }
 
 

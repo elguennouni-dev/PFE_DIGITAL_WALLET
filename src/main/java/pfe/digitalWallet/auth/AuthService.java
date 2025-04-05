@@ -6,7 +6,9 @@ import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.core.appuser.UserService;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
-import pfe.digitalWallet.core.loginhistory.LoginHistoryService;
+import pfe.digitalWallet.shared.dto.LoginRequest;
+import pfe.digitalWallet.shared.dto.SessionDto;
+import pfe.digitalWallet.shared.dto.SignupRequest;
 import pfe.digitalWallet.shared.dto.UserDto;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
@@ -31,17 +33,17 @@ public class AuthService {
         this.securityEventService = securityEventService;
     }
 
-    public Optional<UserDto> login(String username, String password, String device, String location) {
+    public Optional<UserDto> login(LoginRequest request) {
         // Login datetime
         LocalDateTime time = LocalDateTime.now();
 
-        Optional<AppUser> appUserOptional = userService.findByUsername(username);
+        Optional<AppUser> appUserOptional = userService.findByUsername(request.getUsername());
         if (appUserOptional.isEmpty()) {
             return Optional.empty();
         }
 
         AppUser appUser = appUserOptional.get();
-        if (!passwordValidator.isValidPassword(password, appUser.getId())) {
+        if (!passwordValidator.isValidPassword(request.getPassword(), appUser.getId())) {
             // Save login attempt
             LoginAttempt attempt = new LoginAttempt();
             attempt.setAppUser(appUser);
@@ -53,14 +55,16 @@ public class AuthService {
 
         // Generate token
         String token = jwtUtil.generateToken(appUser.getUsername());
+
+
         UserDto userDto = UserDto.from(appUser);
-        userDto.setToken(token);
+
 
 
         // Save login history
         LoginHistory history = new LoginHistory();
-        history.setDevice(device);
-        history.setLocation(location);
+        history.setDevice(request.getDevice());
+        history.setLocation(request.getLocation());
         history.setAppUser(appUser);
         history.setDateTime(time);
         history.setLoginStatus(LoginStatus.LOGGED_IN);
@@ -75,5 +79,39 @@ public class AuthService {
     public void logout(String username) {
         securityEventService.logSuccessfulLogout(username);
     }
+
+
+
+
+
+    public Optional<UserDto> signup(SignupRequest request) {
+        // Signup datetime
+        LocalDateTime time = LocalDateTime.now();
+
+        Optional<AppUser> usernameExist = userService.findByUsername(request.getUsername());
+        if (usernameExist.isPresent()) {
+            return Optional.empty();
+        }
+
+        Optional<AppUser> emailExist = userService.findByEmail(request.getEmail());
+        if (emailExist.isPresent()) {
+            return Optional.empty();
+        }
+
+        // Generate token
+        String token = jwtUtil.generateToken(request.getUsername());
+
+
+        AppUser appUser = new AppUser();
+        appUser.setUsername(request.getUsername());
+        appUser.setEmail(request.getEmail());
+        appUser.setCreatedAt(time);
+        appUser.setUpdatedAt(time);
+
+
+        Optional<AppUser> savedUser = userService.save();
+
+    }
+
 
 }

@@ -17,6 +17,7 @@ public class UserDto {
     private String email;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private SessionDto session;
 
     private String token;
 
