@@ -33,8 +33,6 @@ public class AuthController {
     }
 
 
-
-
     // Private helper methods
     private ResponseEntity<ApiResponse<UserDto>> buildResponse(boolean success, String message, UserDto data, HttpStatus status) {
         ApiResponse<UserDto> response = new ApiResponse<>();
