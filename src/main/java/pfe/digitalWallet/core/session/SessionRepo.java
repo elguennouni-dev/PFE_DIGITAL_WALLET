@@ -9,9 +9,8 @@ import java.util.Optional;
 public interface SessionRepo extends JpaRepository<Session, Long> {
 
     Optional<Session> findByAppUser_Id(Long id);
-
-    Optional<Session> save(Session session);
     Optional<Session> findById(Long id);
     Optional<Session> findByAppUser_Username(String username);
     Optional<Session> findByToken(String token);
+
 }
