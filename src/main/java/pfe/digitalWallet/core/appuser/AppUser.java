@@ -64,4 +64,5 @@ public class AppUser {
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LoginHistory> loginHistories = new ArrayList<>();
 
+
 }
