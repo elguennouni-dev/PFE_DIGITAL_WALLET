@@ -19,7 +19,9 @@ public class JwtUtil {
     @Value("${jwt.expire.time}")
     private long EXPIRE_TIME;
 
+    // Repeated things ...
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String CLAIM_USERNAME = "username";
 
 
     // Strip bearer prefix from token
@@ -75,7 +77,7 @@ public class JwtUtil {
     // Public main methods
     public String generateToken(String username) {
         Map<String, Object> claimsMap = new HashMap<>();
-        claimsMap.put("username", username);
+        claimsMap.put(CLAIM_USERNAME, username);
         return createToken(claimsMap, username);
     }
 
@@ -83,9 +85,9 @@ public class JwtUtil {
         if(!isValidToken(token))
             return null;
         Optional<Claims> claims = getClaimsFromToken(token);
-        if(claims == null)
+        if(claims.isEmpty())
             return null;
-        return claims.orElse(null).get("username", String.class);
+        return claims.orElse(null).get(CLAIM_USERNAME, String.class);
     }
 
     public Date getExpireDateFromToken(String token) {
@@ -115,7 +117,7 @@ public class JwtUtil {
     }
 
     public boolean isValidToken(String token) {
-        return token != null && token.startsWith(BEARER_PREFIX);
+        return token != null && token.startsWith(BEARER_PREFIX) && getClaimsFromToken(token).isPresent();
     }
 
 
