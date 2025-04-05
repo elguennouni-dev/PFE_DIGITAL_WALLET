@@ -3,9 +3,7 @@ package pfe.digitalWallet.core.qrcode;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import pfe.digitalWallet.core.session.Session;
 
 import java.time.LocalDateTime;
@@ -13,6 +11,9 @@ import java.time.LocalDateTime;
 @Table(name = "qr_code")
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter @Setter
 public class QrCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +26,8 @@ public class QrCode {
     private String qrCodeData;
 
     @NotNull(message = "QRcode generation date-time cannot be Null")
+    @NotEmpty(message = "QRcode generation date-time cannot be Empty")
+    @NotBlank(message = "QRcode generation date-time cannot be Blank")
     @PastOrPresent(message = "QRcode generation date-time cannot be in the future")
     private LocalDateTime generatedAt;
 
