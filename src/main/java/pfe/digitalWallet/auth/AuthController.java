@@ -25,7 +25,23 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
-        return ResponseEntity.ok("Login endpoint reached");
+
+        Optional<AppUser> user = appUserService.getByUsername(username);
+
+        if(!user.isPresent()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("This username does not exist.");
+        }
+
+        if(!user.get().getPassword().equals(password)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Wrong password.");
+        }
+
+        String token = "SimpleTokenTest";
+
+
+
     }
 
     @PostMapping("/signup")
