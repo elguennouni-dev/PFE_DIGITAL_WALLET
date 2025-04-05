@@ -8,13 +8,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/appuser")
-public class AppUserController {
+public class UserController {
     @Autowired
-    private AppUserService appUserService;
+    private UserService appUserService;
 
     @PostMapping
     public ResponseEntity<AppUser> createAppUser(AppUser appUser){
