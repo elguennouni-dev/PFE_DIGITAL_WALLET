@@ -3,9 +3,7 @@ package pfe.digitalWallet.core.document;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import pfe.digitalWallet.core.appuser.AppUser;
 
 import java.time.LocalDateTime;
@@ -15,6 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter @Setter
 public class Document {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

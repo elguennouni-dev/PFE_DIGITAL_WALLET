@@ -3,9 +3,7 @@ package pfe.digitalWallet.core.loginhistory;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
 
@@ -16,6 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter @Setter
 public class LoginHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

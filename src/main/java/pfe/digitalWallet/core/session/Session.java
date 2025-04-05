@@ -3,9 +3,7 @@ package pfe.digitalWallet.core.session;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import pfe.digitalWallet.core.qrcode.QrCode;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.shared.enums.session.SessionStatus;
@@ -17,6 +15,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter @Setter
 public class Session {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

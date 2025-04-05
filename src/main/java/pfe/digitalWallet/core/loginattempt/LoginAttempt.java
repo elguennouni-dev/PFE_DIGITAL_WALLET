@@ -6,9 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 
@@ -19,6 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter @Setter
 public class LoginAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
