@@ -14,8 +14,6 @@ import java.time.LocalDateTime;
 @Table(name = "login_history")
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class LoginHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

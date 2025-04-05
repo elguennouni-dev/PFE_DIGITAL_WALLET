@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
 @Table(name = "login_attempt")
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class LoginAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

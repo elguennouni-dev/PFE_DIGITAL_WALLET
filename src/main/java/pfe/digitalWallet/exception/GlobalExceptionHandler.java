@@ -31,7 +31,6 @@ public class GlobalExceptionHandler {
 
         // Iterate through all the field errors
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            // Here fieldError.getField() gives the name of the field, and fieldError.getDefaultMessage() gives the error message
             errorDetails.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
 
@@ -43,6 +42,36 @@ public class GlobalExceptionHandler {
 
         // Return the response with status 400
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(TooManyRequestsException ex) {
+
+
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("message", "Too Many requests, try again later");
+        errorResponse.put("cause", ex.getMessage());
+        errorResponse.put("zonedatetime", ZonedDateTime.now().toString());
+        errorResponse.put("httpstatus", HttpStatus.TOO_MANY_REQUESTS.value());
+
+        // Return the response with status 429
+        return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(UnauthorizedException ex) {
+
+
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("message", "Unauthorized");
+        errorResponse.put("cause", ex.getMessage());
+        errorResponse.put("zonedatetime", ZonedDateTime.now().toString());
+        errorResponse.put("httpstatus", HttpStatus.UNAUTHORIZED.value());
+
+        // Return the response with status 401
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
 

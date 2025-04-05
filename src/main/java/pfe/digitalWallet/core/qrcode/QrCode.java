@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 @Table(name = "qr_code")
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class QrCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
