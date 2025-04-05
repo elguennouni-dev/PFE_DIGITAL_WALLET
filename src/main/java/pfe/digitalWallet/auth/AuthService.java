@@ -1,5 +1,6 @@
 package pfe.digitalWallet.auth;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.core.appuser.AppUser;
@@ -7,14 +8,13 @@ import pfe.digitalWallet.core.appuser.UserService;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.shared.dto.LoginRequest;
-import pfe.digitalWallet.shared.dto.SessionDto;
+import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
 import pfe.digitalWallet.shared.dto.UserDto;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
 import pfe.digitalWallet.shared.validation.PasswordValidator;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -25,24 +25,29 @@ public class AuthService {
     private final UserService userService;
     private final PasswordValidator passwordValidator;
     private final SecurityEventService securityEventService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(JwtUtil jwtUtil,UserService userService, PasswordValidator passwordValidator, SecurityEventService securityEventService) {
+    public AuthService(JwtUtil jwtUtil,UserService userService, PasswordValidator passwordValidator, SecurityEventService securityEventService, PasswordEncoder passwordEncoder) {
         this.jwtUtil = jwtUtil;
         this.userService = userService;
         this.passwordValidator = passwordValidator;
         this.securityEventService = securityEventService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<UserDto> login(LoginRequest request) {
         // Login datetime
         LocalDateTime time = LocalDateTime.now();
 
-        Optional<AppUser> appUserOptional = userService.findByUsername(request.getUsername());
+        // Username not exist
+        Optional<AppUser> appUserOptional = userService.getByUsername(request.getUsername());
         if (appUserOptional.isEmpty()) {
             return Optional.empty();
         }
 
         AppUser appUser = appUserOptional.get();
+
+        // Password incorrect
         if (!passwordValidator.isValidPassword(request.getPassword(), appUser.getId())) {
             // Save login attempt
             LoginAttempt attempt = new LoginAttempt();
@@ -55,8 +60,7 @@ public class AuthService {
 
         // Generate token
         String token = jwtUtil.generateToken(appUser.getUsername());
-
-
+        appUser.setToken(token);
         UserDto userDto = UserDto.from(appUser);
 
 
@@ -76,9 +80,9 @@ public class AuthService {
 
 
     // Logout communication facade
-    public void logout(String username) {
-        securityEventService.logSuccessfulLogout(username);
-    }
+//    public void logout(LogoutRequest request) {
+//        securityEventService.logSuccessfulLogout(request.getUsername());
+//    }
 
 
 
@@ -88,11 +92,13 @@ public class AuthService {
         // Signup datetime
         LocalDateTime time = LocalDateTime.now();
 
-        Optional<AppUser> usernameExist = userService.findByUsername(request.getUsername());
+        // Username taken
+        Optional<AppUser> usernameExist = userService.getByUsername(request.getUsername());
         if (usernameExist.isPresent()) {
             return Optional.empty();
         }
 
+        // Email taken
         Optional<AppUser> emailExist = userService.findByEmail(request.getEmail());
         if (emailExist.isPresent()) {
             return Optional.empty();
@@ -101,15 +107,26 @@ public class AuthService {
         // Generate token
         String token = jwtUtil.generateToken(request.getUsername());
 
+        // Password encoding
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         AppUser appUser = new AppUser();
         appUser.setUsername(request.getUsername());
         appUser.setEmail(request.getEmail());
         appUser.setCreatedAt(time);
         appUser.setUpdatedAt(time);
+        appUser.setToken(token);
+        appUser.setPassword(encodedPassword);
 
+        Optional<AppUser> savedUser = userService.save(appUser);
 
-        Optional<AppUser> savedUser = userService.save();
+        if (savedUser.isEmpty()) {
+            return Optional.empty();
+        }
+
+        UserDto userDto = UserDto.from(savedUser.get());
+
+        return Optional.of(userDto);
 
     }
 

@@ -13,7 +13,7 @@ public class SessionService {
     private SessionRepo sessionRepo;
 
     public Optional<Session> createSession(Session session) {
-        return sessionRepo.save(session);
+        return Optional.of(sessionRepo.save(session));
     }
 
     public Optional<Session> getByUse_Id(AppUser appUser) {

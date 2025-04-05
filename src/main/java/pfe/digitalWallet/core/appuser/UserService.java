@@ -24,7 +24,7 @@ public class UserService {
         return Optional.of(user);
     }
 
-    public Optional<AppUser> findByUsername(String username) {
+    public Optional<AppUser> getByUsername(String username) {
         AppUser user = appUserRepository.findByUsername(username);
         return Optional.ofNullable(user);
     }

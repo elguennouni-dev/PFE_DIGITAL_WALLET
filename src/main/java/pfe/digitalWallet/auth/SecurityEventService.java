@@ -5,6 +5,7 @@ import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginattempt.LoginAttemptService;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.core.loginhistory.LoginHistoryService;
+import pfe.digitalWallet.shared.enums.login.LoginStatus;
 
 @Service
 public class SecurityEventService {
@@ -28,9 +29,10 @@ public class SecurityEventService {
     }
 
     // Handle logouts
-    public void logSuccessfulLogout(String username) {
-
-    }
+//    public void logSuccessfulLogout(String username) {
+//        LoginHistory history = loginHistoryService.getByUser_Username(username).orElse(null);
+//        history.setLoginStatus(LoginStatus.LOGGED_OUT);
+//    }
 
 
 }

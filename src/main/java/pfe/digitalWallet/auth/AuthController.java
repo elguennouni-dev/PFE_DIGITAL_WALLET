@@ -3,9 +3,7 @@ package pfe.digitalWallet.auth;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pfe.digitalWallet.shared.dto.ApiResponse;
-import pfe.digitalWallet.shared.dto.LoginRequest;
-import pfe.digitalWallet.shared.dto.UserDto;
+import pfe.digitalWallet.shared.dto.*;
 
 import java.util.Optional;
 
@@ -19,6 +17,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    // Login handling
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<UserDto>> login(@RequestBody LoginRequest loginRequest) {
 
@@ -29,6 +28,26 @@ public class AuthController {
         }
         return buildResponse(true, "Login successful", userDtoOptional.get(), HttpStatus.OK);
     }
+
+
+    // Signup handling
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<UserDto>> signup(@RequestBody SignupRequest signupRequest) {
+
+        Optional<UserDto> userDtoOptional = authService.signup(signupRequest);
+
+        if(userDtoOptional.isEmpty()) {
+            return buildResponse(false, "Username or email already taken", null, HttpStatus.CONFLICT);
+        }
+        return buildResponse(true, "Signup successful", userDtoOptional.get(), HttpStatus.CREATED);
+    }
+
+
+    // Logout handling
+//    @PostMapping("/logout")
+//    public ResponseEntity<ApiResponse<?>> logout(@RequestBody LogoutRequest logoutRequest) {
+//
+//    }
 
 
     // Private helper methods
