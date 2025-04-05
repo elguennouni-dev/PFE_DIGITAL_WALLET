@@ -3,9 +3,7 @@ package pfe.digitalWallet.core.loginhistory;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
 
@@ -14,12 +12,17 @@ import java.time.LocalDateTime;
 @Table(name = "login_history")
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter @Setter
 public class LoginHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull(message = "Login History date-time cannot be Null")
+    @NotEmpty(message = "Login History date-time cannot be Empty")
+    @NotBlank(message = "Login History date-time cannot be Blank")
     @PastOrPresent(message = "Login History date-time cannot be in the future")
     private LocalDateTime dateTime;
 
@@ -35,7 +38,9 @@ public class LoginHistory {
     @Size(min = 2, message = "location must be at least 2 characters long") // Suggested to send (No-location-found)
     private String location;
 
-    @NotNull(message = "Login status cannot be Null")
+    @NotNull(message = "Login status status cannot be Null")
+    @NotEmpty(message = "Login status cannot be Empty")
+    @NotBlank(message = "Login status cannot be Blank")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginStatus loginStatus;

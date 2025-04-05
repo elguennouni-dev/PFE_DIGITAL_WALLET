@@ -14,17 +14,20 @@ public class AppUserService {
     @Autowired
     private AppUserRepository appUserRepository;
 
-    Optional<AppUser> getByID(Long id) {
+    public Optional<AppUser> getByID(Long id) {
         return Optional.of(appUserRepository.findById(id)).orElse(null);
     }
 
-    Optional<List<AppUser>> getAll() {
+    public Optional<List<AppUser>> getAll() {
         return Optional.of(appUserRepository.findAll());
     }
 
-    Optional<AppUser> getByUsername(String username) {
+    public Optional<AppUser> getByUsername(String username) {
         return Optional.of(appUserRepository.findByUsername(username));
     }
 
+    public Optional<AppUser> save(AppUser appUser) {
+        return Optional.of(appUserRepository.save(appUser));
+    }
 
 }

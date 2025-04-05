@@ -17,9 +17,8 @@ public class AppUserController {
     private AppUserService appUserService;
 
     @PostMapping
-    public void createAppUser(AppUser appUser){
-        // return ResponseEntity.ok(appUserService.getByUsername(appUser.getUsername()).orElse(null));
-        System.out.println("Received user: " + appUser);
+    public ResponseEntity<AppUser> createAppUser(AppUser appUser){
+        return ResponseEntity.ok(appUserService.getByUsername(appUser.getUsername()).orElse(null));
     }
 
     @GetMapping("/all")
