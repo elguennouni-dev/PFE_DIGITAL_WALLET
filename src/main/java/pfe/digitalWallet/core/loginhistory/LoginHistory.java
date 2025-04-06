@@ -12,17 +12,12 @@ import java.time.LocalDateTime;
 @Table(name = "login_history")
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter @Setter
 public class LoginHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull(message = "Login History date-time cannot be Null")
-    @NotEmpty(message = "Login History date-time cannot be Empty")
-    @NotBlank(message = "Login History date-time cannot be Blank")
     @PastOrPresent(message = "Login History date-time cannot be in the future")
     private LocalDateTime dateTime;
 
@@ -39,8 +34,6 @@ public class LoginHistory {
     private String location;
 
     @NotNull(message = "Login status status cannot be Null")
-    @NotEmpty(message = "Login status cannot be Empty")
-    @NotBlank(message = "Login status cannot be Blank")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginStatus loginStatus;

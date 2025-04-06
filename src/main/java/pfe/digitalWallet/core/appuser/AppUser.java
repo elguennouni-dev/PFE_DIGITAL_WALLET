@@ -3,12 +3,11 @@ package pfe.digitalWallet.core.appuser;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.Data;
 import pfe.digitalWallet.core.document.Document;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.core.session.Session;
-import pfe.digitalWallet.shared.validation.annotation.ValidLocalDateTime;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,9 +16,6 @@ import java.util.List;
 @Table(name = "app_user")
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter @Setter
 public class AppUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -78,6 +74,7 @@ public class AppUser {
     @Valid
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LoginHistory> loginHistories = new ArrayList<>();
+
 
     @Override
     public String toString() {
