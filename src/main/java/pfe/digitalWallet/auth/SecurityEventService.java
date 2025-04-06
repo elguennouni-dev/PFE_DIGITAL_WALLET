@@ -29,9 +29,16 @@ public class SecurityEventService {
     }
 
     // Handle logouts
+    public void saveLogoutHistory(LoginHistory history) {
+        this.loginHistoryService.save(history);
+    }
+
+
 //    public void logSuccessfulLogout(String username) {
-//        LoginHistory history = loginHistoryService.getByUser_Username(username).orElse(null);
+//        LoginHistory history = loginHistoryService.getByUser_Username(username)
+//                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 //        history.setLoginStatus(LoginStatus.LOGGED_OUT);
+//        loginHistoryService.save(history);
 //    }
 
 
