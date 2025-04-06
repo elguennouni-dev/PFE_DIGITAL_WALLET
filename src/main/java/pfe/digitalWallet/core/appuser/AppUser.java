@@ -35,7 +35,7 @@ public class AppUser {
     @NotNull(message = "Password cannot be Null")
     @NotEmpty(message = "Password cannot be Empty")
     @NotBlank(message = "Password cannot be Blank")
-    @Size(min = 8, max = 32, message = "Password must be between 8 and 32 characters")
+    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     private String password;
 
     @NotNull(message = "Password cannot be Null")
@@ -44,24 +44,24 @@ public class AppUser {
     @Email(message = "Email should be valid")
     private String email;
 
-//    @NotNull(message = "Creation date-time cannot be Null")
-//    @NotEmpty(message = "Creation date-time cannot be Empty")
-//    @NotBlank(message = "Creation date-time cannot be Blank")
-//    @PastOrPresent(message = "Creation date-time cannot be in the future")
-    @ValidLocalDateTime(message = "Creation date-time cannot be null or in the future")
+    @NotNull(message = "Creation date-time cannot be Null")
+    @NotEmpty(message = "Creation date-time cannot be Empty")
+    @NotBlank(message = "Creation date-time cannot be Blank")
+    @PastOrPresent(message = "Creation date-time cannot be in the future")
+//    @ValidLocalDateTime(message = "Creation date-time cannot be null or in the future")
     private LocalDateTime createdAt;
 
-//    @NotNull(message = "Update date-time cannot be Null")
-//    @NotEmpty(message = "Update date-time cannot be Empty")
-//    @NotBlank(message = "Update date-time cannot be Blank")
-//    @PastOrPresent(message = "Update date-time cannot be in the future")
-    @ValidLocalDateTime(message = "Update date-time cannot be null or in the future")
+    @NotNull(message = "Update date-time cannot be Null")
+    @NotEmpty(message = "Update date-time cannot be Empty")
+    @NotBlank(message = "Update date-time cannot be Blank")
+    @PastOrPresent(message = "Update date-time cannot be in the future")
+//    @ValidLocalDateTime(message = "Update date-time cannot be null or in the future")
     private LocalDateTime updatedAt;
 
-    @NotNull(message = "Token cannot be Null")
-    @NotEmpty(message = "Token cannot be Empty")
-    @NotBlank(message = "Token cannot be Blank")
-    private String token;
+//    @NotNull(message = "Token cannot be Null")
+//    @NotEmpty(message = "Token cannot be Empty")
+//    @NotBlank(message = "Token cannot be Blank")
+//    private String token;
 
     @Valid
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -79,4 +79,19 @@ public class AppUser {
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LoginHistory> loginHistories = new ArrayList<>();
 
+    @Override
+    public String toString() {
+        return "AppUser{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", email='" + email + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", sessions=" + sessions +
+                ", loginAttempts=" + loginAttempts +
+                ", documents=" + documents +
+                ", loginHistories=" + loginHistories +
+                '}';
+    }
 }
