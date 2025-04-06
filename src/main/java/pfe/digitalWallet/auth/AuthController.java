@@ -50,10 +50,22 @@ public class AuthController {
     }
 
     // Logout handling (if needed in the future)
-//    @PostMapping("/logout")
-//    public ResponseEntity<ApiResponse<?>> logout(@RequestBody LogoutRequest logoutRequest) {
-//        return buildResponse(true, "Logout successful", null, HttpStatus.OK);
-//    }
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<?>> logout(@RequestBody LogoutRequest logoutRequest) {
+        try {
+            authService.logout(logoutRequest);
+            ApiResponse<?> response = new ApiResponse<>();
+            response.setSuccess(true);
+            response.setData(null);
+            response.setMessage("Logout successful");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            ApiResponse<?> response = new ApiResponse<>();
+            response.setSuccess(false);
+            response.setMessage("Error during logout: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 
     // Private helper methods
     private ResponseEntity<ApiResponse<UserDto>> buildResponse(boolean success, String message, UserDto data, HttpStatus status) {
