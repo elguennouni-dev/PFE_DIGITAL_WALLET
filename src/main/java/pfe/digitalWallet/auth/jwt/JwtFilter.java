@@ -11,21 +11,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import pfe.digitalWallet.core.appuser.AppUser;
-import pfe.digitalWallet.core.appuser.UserService;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
-     private final UserDetailsService userDetailsService;
-//    private final UserService userDetailsService;
+    private final JwtBlacklistService jwtBlacklistService;
+    private final UserDetailsService userDetailsService;
 
-    public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+    public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService, JwtBlacklistService jwtBlacklistService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.jwtBlacklistService = jwtBlacklistService;
     }
 
     @Override
@@ -34,6 +32,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(!jwtUtil.isValidToken(token)) {
             doFilter(request, response, filterChain);
+            return;
+        }
+
+        if(jwtBlacklistService.isTokenBlacklisted(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token has been blacklisted");
             return;
         }
 

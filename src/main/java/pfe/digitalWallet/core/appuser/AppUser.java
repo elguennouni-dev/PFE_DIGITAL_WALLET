@@ -41,15 +41,15 @@ public class AppUser {
     private String email;
 
     @NotNull(message = "Creation date-time cannot be Null")
-    @NotEmpty(message = "Creation date-time cannot be Empty")
-    @NotBlank(message = "Creation date-time cannot be Blank")
+//    @NotEmpty(message = "Creation date-time cannot be Empty")
+//    @NotBlank(message = "Creation date-time cannot be Blank")
     @PastOrPresent(message = "Creation date-time cannot be in the future")
 //    @ValidLocalDateTime(message = "Creation date-time cannot be null or in the future")
     private LocalDateTime createdAt;
 
     @NotNull(message = "Update date-time cannot be Null")
-    @NotEmpty(message = "Update date-time cannot be Empty")
-    @NotBlank(message = "Update date-time cannot be Blank")
+//    @NotEmpty(message = "Update date-time cannot be Empty")
+//    @NotBlank(message = "Update date-time cannot be Blank")
     @PastOrPresent(message = "Update date-time cannot be in the future")
 //    @ValidLocalDateTime(message = "Update date-time cannot be null or in the future")
     private LocalDateTime updatedAt;

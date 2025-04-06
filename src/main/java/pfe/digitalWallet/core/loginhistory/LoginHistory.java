@@ -17,7 +17,7 @@ public class LoginHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Login History date-time cannot be Null")
+//    @NotNull(message = "Login History date-time cannot be Null")
     @PastOrPresent(message = "Login History date-time cannot be in the future")
     private LocalDateTime dateTime;
 

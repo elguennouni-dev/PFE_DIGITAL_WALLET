@@ -27,11 +27,7 @@ public class UserService {
 
     @Transactional
     public Optional<AppUser> save(AppUser appUser) {
-
-        System.out.println("Hahowa Al7aaaaaaaaaj: " + appUser.toString());
-
         AppUser user = appUserRepository.save(appUser);
-
         return Optional.of(user);
     }
 
@@ -45,8 +41,12 @@ public class UserService {
         return Optional.ofNullable(user);
     }
 
-
     public Optional<AppUser> findById(Long id) {
         return appUserRepository.findById(id);
     }
+
+    public void deleteById(Long id) {
+        appUserRepository.deleteById(id);
+    }
+
 }
