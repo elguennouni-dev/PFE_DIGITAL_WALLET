@@ -8,7 +8,6 @@ import pfe.digitalWallet.core.appuser.UserService;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.shared.dto.LoginRequest;
-import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
 import pfe.digitalWallet.shared.dto.UserDto;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
@@ -27,7 +26,12 @@ public class AuthService {
     private final SecurityEventService securityEventService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(JwtUtil jwtUtil,UserService userService, PasswordValidator passwordValidator, SecurityEventService securityEventService, PasswordEncoder passwordEncoder) {
+    public AuthService(
+            JwtUtil jwtUtil,
+            UserService userService,
+            PasswordValidator passwordValidator,
+            SecurityEventService securityEventService,
+            PasswordEncoder passwordEncoder) {
         this.jwtUtil = jwtUtil;
         this.userService = userService;
         this.passwordValidator = passwordValidator;
@@ -36,10 +40,8 @@ public class AuthService {
     }
 
     public Optional<UserDto> login(LoginRequest request) {
-        // Login datetime
         LocalDateTime time = LocalDateTime.now();
 
-        // Username not exist
         Optional<AppUser> appUserOptional = userService.getByUsername(request.getUsername());
         if (appUserOptional.isEmpty()) {
             return Optional.empty();
@@ -47,9 +49,8 @@ public class AuthService {
 
         AppUser appUser = appUserOptional.get();
 
-        // Password incorrect
+        // Check password securely
         if (!passwordValidator.isValidPassword(request.getPassword(), appUser.getId())) {
-            // Save login attempt
             LoginAttempt attempt = new LoginAttempt();
             attempt.setAppUser(appUser);
             attempt.setDateTime(time);
@@ -58,12 +59,12 @@ public class AuthService {
             return Optional.empty();
         }
 
-        // Generate token
+        // Generate JWT token
         String token = jwtUtil.generateToken(appUser.getUsername());
-        appUser.setToken(token);
+
+        // Convert user to DTO and set token
         UserDto userDto = UserDto.from(appUser);
-
-
+        userDto.setToken(token);
 
         // Save login history
         LoginHistory history = new LoginHistory();
@@ -77,37 +78,15 @@ public class AuthService {
         return Optional.of(userDto);
     }
 
-
-
-    // Logout communication facade
-//    public void logout(LogoutRequest request) {
-//        securityEventService.logSuccessfulLogout(request.getUsername());
-//    }
-
-
-
-
-
     public Optional<UserDto> signup(SignupRequest request) {
-        // Signup datetime
         LocalDateTime time = LocalDateTime.now();
 
-        // Username taken
-        Optional<AppUser> usernameExist = userService.getByUsername(request.getUsername());
-        if (usernameExist.isPresent()) {
+        if (userService.getByUsername(request.getUsername()).isPresent() ||
+                userService.findByEmail(request.getEmail()).isPresent()) {
             return Optional.empty();
         }
 
-        // Email taken
-        Optional<AppUser> emailExist = userService.findByEmail(request.getEmail());
-        if (emailExist.isPresent()) {
-            return Optional.empty();
-        }
-
-        // Generate token
-        String token = jwtUtil.generateToken(request.getUsername());
-
-        // Password encoding
+        // Encode password
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         AppUser appUser = new AppUser();
@@ -115,20 +94,19 @@ public class AuthService {
         appUser.setEmail(request.getEmail());
         appUser.setCreatedAt(time);
         appUser.setUpdatedAt(time);
-        appUser.setToken(token);
         appUser.setPassword(encodedPassword);
 
         Optional<AppUser> savedUser = userService.save(appUser);
-
         if (savedUser.isEmpty()) {
             return Optional.empty();
         }
 
+        // Generate JWT token
+        String token = jwtUtil.generateToken(request.getUsername());
+
         UserDto userDto = UserDto.from(savedUser.get());
+        userDto.setToken(token);
 
         return Optional.of(userDto);
-
     }
-
-
 }

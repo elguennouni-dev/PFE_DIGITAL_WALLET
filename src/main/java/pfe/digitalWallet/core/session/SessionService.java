@@ -21,7 +21,7 @@ public class SessionService {
     }
 
     public Optional<Session> getByToken(String token) {
-        return sessionRepo.findByToken(token);
+        return sessionRepo.findBySessionToken(token);
     }
 
     public Optional<Session> getById(Long id) {
