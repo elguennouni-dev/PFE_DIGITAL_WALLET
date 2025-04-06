@@ -78,6 +78,9 @@ public class AuthService {
         return Optional.of(userDto);
     }
 
+
+
+    ////////////////////////////////////////////////////////////////////
     public Optional<UserDto> signup(SignupRequest request) {
         LocalDateTime time = LocalDateTime.now();
 
@@ -97,9 +100,11 @@ public class AuthService {
         appUser.setPassword(encodedPassword);
 
         Optional<AppUser> savedUser = userService.save(appUser);
+
         if (savedUser.isEmpty()) {
             return Optional.empty();
         }
+
 
         // Generate JWT token
         String token = jwtUtil.generateToken(request.getUsername());

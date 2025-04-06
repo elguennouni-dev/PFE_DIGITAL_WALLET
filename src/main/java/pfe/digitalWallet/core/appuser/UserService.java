@@ -2,6 +2,7 @@ package pfe.digitalWallet.core.appuser;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pfe.digitalWallet.shared.dto.UserDto;
 
 import java.util.List;
@@ -14,13 +15,23 @@ public class UserService {
     private UserRepository appUserRepository;
 
 
+    public Optional<AppUser> login(String username, String password) {
+        AppUser user = appUserRepository.findByUsernameAndPassword(username,password);
+        return Optional.ofNullable(user);
+    }
+
     public Optional<List<AppUser>> getAll() {
         List<AppUser> appUsers = appUserRepository.findAll();
         return Optional.ofNullable(appUsers);
     }
 
+    @Transactional
     public Optional<AppUser> save(AppUser appUser) {
+
+        System.out.println("Hahowa Al7aaaaaaaaaj: " + appUser.toString());
+
         AppUser user = appUserRepository.save(appUser);
+
         return Optional.of(user);
     }
 
