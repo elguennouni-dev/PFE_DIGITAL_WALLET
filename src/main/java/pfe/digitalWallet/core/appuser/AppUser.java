@@ -3,6 +3,7 @@ package pfe.digitalWallet.core.appuser;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import pfe.digitalWallet.core.document.Document;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;

@@ -1,5 +1,6 @@
 package pfe.digitalWallet.core.appuser;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,14 +9,17 @@ import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.shared.dto.ApiResponse;
 import pfe.digitalWallet.core.appuser.dao.LoginRequest;
 import pfe.digitalWallet.core.appuser.dto.UserDto;
+import pfe.digitalWallet.shared.mapper.UserMapper;
 
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/appuser")
+@RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private UserService appUserService;
+
+    private final UserService appUserService;
+    private final UserMapper userMapper;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -25,9 +29,9 @@ public class UserController {
         Optional<AppUser> optionalUser = appUserService.login(request.username(), request.password());
 
         if (optionalUser.isPresent()) {
-            UserDto dto = UserDto.from(optionalUser.get());
-            String token = jwtUtil.generateToken(dto.getUsername());
-            dto.setToken(token);
+            UserDto dto = userMapper.toDto(optionalUser.get());
+            String token = jwtUtil.generateToken(dto.username());
+            dto.withToken(token);
 
             return ResponseEntity.ok(new ApiResponse<>(
                     true,"Login successful",dto)
