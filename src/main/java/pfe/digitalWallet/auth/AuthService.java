@@ -45,7 +45,6 @@ public class AuthService {
         AppUser appUser = appUserOptional.get();
 
         if (!passwordValidator.isValidPassword(request.password(), appUser.getId())) {
-            // Log failed login attempt
             logLoginAttempt(appUser, time, AttemptStatus.FAILURE);
             return Optional.empty();
         }
@@ -54,7 +53,6 @@ public class AuthService {
             String token = jwtUtil.generateToken(appUser.getUsername());
             UserDto userDto = userMapper.toDto(appUser);
             userDto.withToken(token);
-            // Log successful login attempt
             logLoginHistory(request, appUser, time, LoginStatus.LOGGED_IN);
             return Optional.of(userDto);
         } catch (Exception e) {
@@ -116,7 +114,6 @@ public class AuthService {
             throw new IllegalArgumentException("User not found");
         }
 
-        // Log logout attempt
         logLogoutHistory(user.get(), token);
         jwtBlacklistService.blacklistToken(token);
     }
@@ -160,7 +157,7 @@ public class AuthService {
     }
 
     private void handleException(String message, Exception e) {
-        e.printStackTrace();  // This could be replaced with a more specific error handling mechanism if needed
+        e.printStackTrace();
         throw new RuntimeException(message, e);
     }
 }
