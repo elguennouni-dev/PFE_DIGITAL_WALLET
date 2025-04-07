@@ -43,7 +43,7 @@ public class Document {
     @NotNull(message = "File cannot be null")
     @Lob
     @Column(columnDefinition = "BYTEA")
-    private Byte[] documentFile;
+    private byte[] documentFile;
 
     @Valid
     @ManyToOne

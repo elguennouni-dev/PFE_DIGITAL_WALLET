@@ -52,12 +52,13 @@ public class AuthService {
         try {
             String token = jwtUtil.generateToken(appUser.getUsername());
             UserDto userDto = userMapper.toDto(appUser);
-            userDto.withToken(token);
+            userDto = userDto.withToken(token);
             logLoginHistory(request, appUser, time, LoginStatus.LOGGED_IN);
             return Optional.of(userDto);
         } catch (Exception e) {
             handleException("Error during token generation", e);
         }
+
         return Optional.empty();
     }
 
