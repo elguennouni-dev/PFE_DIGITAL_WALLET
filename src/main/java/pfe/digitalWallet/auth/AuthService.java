@@ -6,12 +6,12 @@ import pfe.digitalWallet.auth.jwt.JwtBlacklistService;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.core.appuser.UserService;
+import pfe.digitalWallet.core.appuser.dao.LoginRequest;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
-import pfe.digitalWallet.shared.dto.LoginRequest;
 import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
-import pfe.digitalWallet.shared.dto.UserDto;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
 import pfe.digitalWallet.shared.validation.PasswordValidator;
@@ -49,7 +49,7 @@ public class AuthService {
         LocalDateTime time = LocalDateTime.now();
 
         // Check if user exists
-        Optional<AppUser> appUserOptional = userService.getByUsername(request.getUsername());
+        Optional<AppUser> appUserOptional = userService.getByUsername(request.username());
         if (appUserOptional.isEmpty()) {
             return Optional.empty();
         }
@@ -58,7 +58,7 @@ public class AuthService {
 
         try {
             // Check password securely
-            if (!passwordValidator.isValidPassword(request.getPassword(), appUser.getId())) {
+            if (!passwordValidator.isValidPassword(request.password(), appUser.getId())) {
                 try {
                     LoginAttempt attempt = new LoginAttempt();
                     attempt.setAppUser(appUser);
@@ -83,8 +83,8 @@ public class AuthService {
                 // Save login history
                 try {
                     LoginHistory history = new LoginHistory();
-                    history.setDevice(request.getDevice());
-                    history.setLocation(request.getLocation());
+                    history.setDevice(request.device());
+                    history.setLocation(request.location());
                     history.setAppUser(appUser);
                     history.setDateTime(time);
                     history.setLoginStatus(LoginStatus.LOGGED_IN);
@@ -111,24 +111,24 @@ public class AuthService {
         LocalDateTime time = LocalDateTime.now();
 
         // Check if username exists
-        Optional<AppUser> existingUsername = userService.getByUsername(request.getUsername());
+        Optional<AppUser> existingUsername = userService.getByUsername(request.username());
         if (existingUsername.isPresent()) {
             return Optional.empty();
         }
 
         // Check if email exists
-        Optional<AppUser> existingEmail = userService.findByEmail(request.getEmail());
+        Optional<AppUser> existingEmail = userService.findByEmail(request.email());
         if (existingEmail.isPresent()) {
             return Optional.empty();
         }
 
         try {
             // Encode password
-            String encodedPassword = passwordEncoder.encode(request.getPassword());
+            String encodedPassword = passwordEncoder.encode(request.password());
 
             AppUser appUser = new AppUser();
-            appUser.setUsername(request.getUsername());
-            appUser.setEmail(request.getEmail());
+            appUser.setUsername(request.username());
+            appUser.setEmail(request.email());
             appUser.setCreatedAt(time);
             appUser.setUpdatedAt(time);
             appUser.setPassword(encodedPassword);
@@ -142,7 +142,7 @@ public class AuthService {
 
             try {
                 // Generate JWT token
-                String token = jwtUtil.generateToken(request.getUsername());
+                String token = jwtUtil.generateToken(request.username());
 
                 UserDto userDto = UserDto.from(savedUser.get());
                 userDto.setToken(token);
@@ -161,7 +161,7 @@ public class AuthService {
 
 
     public void logout(LogoutRequest request) {
-        String token = request.getToken();
+        String token = request.token();
 
         if (token == null || token.isEmpty()) {
             throw new IllegalArgumentException("Token is empty or invalid");

@@ -22,28 +22,21 @@ public class UserController {
 
     @GetMapping("/login")
     public ResponseEntity<ApiResponse<UserDto>> login(@RequestBody LoginRequest request) {
-        Optional<AppUser> optionalUser = appUserService.login(request.getUsername(), request.getPassword());
+        Optional<AppUser> optionalUser = appUserService.login(request.username(), request.password());
 
         if (optionalUser.isPresent()) {
             UserDto dto = UserDto.from(optionalUser.get());
             String token = jwtUtil.generateToken(dto.getUsername());
             dto.setToken(token);
 
-            ApiResponse<UserDto> response = new ApiResponse<>();
-            response.setSuccess(true);
-            response.setMessage("Login successful");
-            response.setData(dto);
-
-            return ResponseEntity.ok(response);
-        } else {
-            ApiResponse<UserDto> response = new ApiResponse<>();
-            response.setSuccess(false);
-            response.setMessage("Invalid username or password");
-            response.setData(null);
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.ok(new ApiResponse<>(
+                    true,"Login successful",dto)
+            );
         }
-    }
 
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>(
+                false,"Invalid username or password",null)
+        );
+    }
 
 }
