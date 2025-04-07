@@ -3,6 +3,8 @@ package pfe.digitalWallet.auth;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pfe.digitalWallet.core.appuser.dao.LoginRequest;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.shared.dto.*;
 
 import java.util.Optional;

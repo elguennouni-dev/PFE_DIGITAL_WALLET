@@ -1,12 +1,10 @@
-package pfe.digitalWallet.shared.dto;
+package pfe.digitalWallet.core.appuser.dto;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import pfe.digitalWallet.core.appuser.AppUser;
 
-import java.sql.Date;
 import java.time.LocalDateTime;
 
 @Getter @Setter

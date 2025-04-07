@@ -3,14 +3,12 @@ package pfe.digitalWallet.core.appuser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.shared.dto.ApiResponse;
-import pfe.digitalWallet.shared.dto.LoginRequest;
-import pfe.digitalWallet.shared.dto.UserDto;
+import pfe.digitalWallet.core.appuser.dao.LoginRequest;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
