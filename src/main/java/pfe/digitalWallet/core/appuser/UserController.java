@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.core.appuser.dto.UserDto;
-import pfe.digitalWallet.shared.mapper.UserMapper;
+import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,10 +46,7 @@ public class UserController {
 
     @GetMapping("/{username}")
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
-        return appUserService.getByUsername(username)
-                .map(userMapper::toDto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+        return appUserService.getByUsername(username);
     }
 
     @GetMapping("/{email}")

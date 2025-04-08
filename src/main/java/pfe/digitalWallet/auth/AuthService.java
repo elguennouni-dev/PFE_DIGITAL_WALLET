@@ -15,7 +15,7 @@ import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
-import pfe.digitalWallet.shared.mapper.UserMapper;
+import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 import pfe.digitalWallet.shared.validation.PasswordValidator;
 
 import java.time.LocalDateTime;

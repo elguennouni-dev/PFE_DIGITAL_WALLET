@@ -1,4 +1,4 @@
-package pfe.digitalWallet.shared.mapper;
+package pfe.digitalWallet.core.appuser.mapper;
 
 import org.mapstruct.Mapper;
 import pfe.digitalWallet.core.appuser.AppUser;
