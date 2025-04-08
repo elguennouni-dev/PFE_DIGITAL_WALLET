@@ -1,4 +1,11 @@
 package pfe.digitalWallet.shared.mapper;
 
-public class UserMapper {
+import org.mapstruct.Mapper;
+import pfe.digitalWallet.core.appuser.AppUser;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
+
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+    UserDto toDto(AppUser user);
+    AppUser toEntity(UserDto dto);
 }

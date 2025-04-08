@@ -3,7 +3,10 @@ package pfe.digitalWallet.core.appuser;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import pfe.digitalWallet.core.document.Document;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
@@ -15,7 +18,8 @@ import java.util.List;
 
 @Table(name = "app_user")
 @Entity
-@Data
+@Getter
+@Setter
 public class AppUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,20 +68,4 @@ public class AppUser {
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LoginHistory> loginHistories = new ArrayList<>();
 
-
-    @Override
-    public String toString() {
-        return "AppUser{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", email='" + email + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", sessions=" + sessions +
-                ", loginAttempts=" + loginAttempts +
-                ", documents=" + documents +
-                ", loginHistories=" + loginHistories +
-                '}';
-    }
 }
