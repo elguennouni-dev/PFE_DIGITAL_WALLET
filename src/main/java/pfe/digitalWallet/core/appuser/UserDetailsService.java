@@ -14,10 +14,6 @@ public class UserDetailsService implements org.springframework.security.core.use
     @Autowired
     private UserMapper userMapper;
 
-    public UserDetailsService(UserService userService) {
-        this.userService = userService;
-    }
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AppUser user = userMapper.toEntity(userService.getByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found")));

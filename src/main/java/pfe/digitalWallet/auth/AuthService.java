@@ -161,7 +161,10 @@ public class AuthService {
 
             if(status == AttemptStatus.FAILURE) {
                 // Increment failed attempts
+                attempt.setLastFailedAttempt(LocalDateTime.now());
                 loginAttemptService.incrementFailedAttempts(appUser);
+            } else {
+                attempt.setLastFailedAttempt(LocalDateTime.now());
             }
 
             securityEventService.saveLoginAttempt(attempt);

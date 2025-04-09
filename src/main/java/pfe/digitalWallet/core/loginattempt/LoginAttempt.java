@@ -27,10 +27,9 @@ public class LoginAttempt {
     @Column(nullable = false)
     private AttemptStatus loginStatus;
 
-    
+
     private int failedAttempts;
 
-    @NotNull(message = "Login attempt date-time cannot be Null")
     @PastOrPresent(message = "Login attempt date-time cannot be in the future")
     private LocalDateTime lastFailedAttempt;
 

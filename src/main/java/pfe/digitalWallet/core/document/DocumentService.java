@@ -3,9 +3,13 @@ package pfe.digitalWallet.core.document;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pfe.digitalWallet.core.appuser.UserService;
+import pfe.digitalWallet.core.document.dao.DocumentDao;
 import pfe.digitalWallet.core.document.dto.DocumentDto;
 import pfe.digitalWallet.core.document.mapper.DocumentMapper;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,9 +22,26 @@ public class DocumentService {
     private DocumentRepo documentRepository;
     @Autowired
     private DocumentMapper documentMapper;
+    @Autowired
+    private UserService userService;
+
+    public void saveDocument(DocumentDao documentDao) throws IOException {
+        byte[] documentBytes = documentDao.file().getBytes();
+
+        Document document = new Document();
+        document.setDocumentTitle(documentDao.documentTitle());
+        document.setDocumentFile(documentBytes);
+        document.setCreatedAt(LocalDateTime.now());
+        document.setViewCount(0);
+        document.setDownloadCount(0);
+        document.setRsaKey("AAAAAAAAAAAAAAAAAAA");
+        document.setAppUser(userService.findById(documentDao.appUserId()).get());
+
+        documentRepository.save(document);
+    }
 
     public List<DocumentDto> getAllByUserId(Long userId) {
-        List<Document> documents = documentRepository.findAllByAppUserId(userId);
+        List<Document> documents = documentRepository.findByAppUserId(userId);
         return documentMapper.toDocumentDtoList(documents); // Mapping Entity to DTO
     }
 

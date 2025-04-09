@@ -1,3 +1,9 @@
 package pfe.digitalWallet.core.document.dao;
 
-public record DocumentDao() {}
+import org.springframework.web.multipart.MultipartFile;
+
+public record DocumentDao(
+        MultipartFile file,
+        String documentTitle,
+        Long appUserId
+) {}
