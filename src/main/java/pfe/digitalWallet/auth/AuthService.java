@@ -1,6 +1,6 @@
 package pfe.digitalWallet.auth;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pfe.digitalWallet.auth.jwt.JwtBlacklistService;
@@ -10,6 +10,7 @@ import pfe.digitalWallet.core.appuser.UserService;
 import pfe.digitalWallet.core.appuser.dao.LoginRequest;
 import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
+import pfe.digitalWallet.core.loginattempt.LoginAttemptService;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
@@ -22,62 +23,78 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
-    private final JwtUtil jwtUtil;
-    private final UserService userService;
-    private final PasswordValidator passwordValidator;
-    private final SecurityEventService securityEventService;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtBlacklistService jwtBlacklistService;
-    private final UserMapper userMapper;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private PasswordValidator passwordValidator;
+    @Autowired
+    private SecurityEventService securityEventService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtBlacklistService jwtBlacklistService;
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private LoginAttemptService loginAttemptService;
 
 
+    // Handle login
     public Optional<UserDto> login(LoginRequest request) {
         LocalDateTime time = LocalDateTime.now();
-
-        Optional<AppUser> appUserOptional = userService.getByUsername(request.username());
-        if (appUserOptional.isEmpty()) {
+        Optional<UserDto> optionalUserDto = userService.getByUsername(request.username());
+        if(optionalUserDto.isEmpty()) {
             return Optional.empty();
         }
 
-        AppUser appUser = appUserOptional.get();
+        UserDto userDto = optionalUserDto.get();
+        AppUser userEntity = userMapper.toEntity(userDto);
+        LoginAttempt attempt = loginAttemptService.getByUser(userEntity);
 
-        if (!passwordValidator.isValidPassword(request.password(), appUser.getId())) {
-            logLoginAttempt(appUser, time, AttemptStatus.FAILURE);
+        // Check login attempts
+        if(attempt != null && attempt.getFailedAttempts() >= 5 && attempt.getLastFailedAttempt().isAfter(LocalDateTime.now().minusMinutes(15))) {
+            throw new IllegalArgumentException("Your account is locked due too many login attempts. Please tru again later.");
+        }
+
+        // Verify password
+        if(!passwordValidator.isValidPassword(request.password(), userDto.id())) {
+            logLoginAttempt(userEntity, time, AttemptStatus.FAILURE);
             return Optional.empty();
         }
+
+        loginAttemptService.resetFailedAttempts(userEntity);
 
         try {
-            String token = jwtUtil.generateToken(appUser.getUsername());
-            UserDto userDto = userMapper.toDto(appUser);
-            userDto = userDto.withToken(token);
-            logLoginHistory(request, appUser, time, LoginStatus.LOGGED_IN);
-            return Optional.of(userDto);
+            String token = jwtUtil.generateToken(userDto.username());
+            UserDto updatedUser = userDto.withToken(token);
+
+            // Save login history and login attempt
+            logLoginHistory(request, userEntity, time, LoginStatus.LOGGED_IN);
+            logLoginAttempt(userEntity, time, AttemptStatus.SUCCESS);
+            return Optional.of(updatedUser);
+
         } catch (Exception e) {
             handleException("Error during token generation", e);
+            return Optional.empty();
         }
-
-        return Optional.empty();
     }
 
+
+    // Handle signup
     public Optional<UserDto> signup(SignupRequest request) {
         LocalDateTime time = LocalDateTime.now();
 
-        Optional<AppUser> existingUsername = userService.getByUsername(request.username());
-        if (existingUsername.isPresent()) {
-            return Optional.empty();
-        }
-
-        Optional<AppUser> existingEmail = userService.findByEmail(request.email());
-        if (existingEmail.isPresent()) {
+        // Check if username or email already exists
+        if(userService.getByUsername(request.username()).isPresent() || userService.findByEmail(request.email()).isPresent()) {
             return Optional.empty();
         }
 
         try {
             String encodedPassword = passwordEncoder.encode(request.password());
-
             AppUser appUser = new AppUser();
             appUser.setUsername(request.username());
             appUser.setEmail(request.email());
@@ -86,48 +103,72 @@ public class AuthService {
             appUser.setPassword(encodedPassword);
 
             Optional<AppUser> savedUser = userService.save(appUser);
-            if (savedUser.isEmpty()) {
+            if(savedUser.isEmpty()) {
                 return Optional.empty();
             }
 
             String token = jwtUtil.generateToken(request.username());
-            UserDto userDto = userMapper.toDto(savedUser.get());
-            userDto.withToken(token);
-
+            UserDto userDto = userMapper.toDto(savedUser.get()).withToken(token);
             return Optional.of(userDto);
+
         } catch (Exception e) {
             handleException("Error during signup process", e);
         }
+
         return Optional.empty();
+
     }
 
+
+
+    // Handle logput
     public void logout(LogoutRequest request) {
+        LocalDateTime time = LocalDateTime.now();
         String token = request.token();
 
-        if (token == null || token.isEmpty()) {
+        if(token == null || token.isBlank()) {
             throw new IllegalArgumentException("Token is empty or invalid");
         }
 
-        String username = jwtUtil.getUsernameFromToken(token);
-
-        Optional<AppUser> user = userService.getByUsername(username);
-        if (user.isEmpty()) {
-            throw new IllegalArgumentException("User not found");
+        if (!jwtUtil.isValidToken(token)) {
+            throw new IllegalArgumentException("Token is invalid or expired");
         }
 
-        logLogoutHistory(user.get(), token);
+        String username = jwtUtil.getUsernameFromToken(token);
+        UserDto userDto = userService.getByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if(!jwtUtil.validateToken(token, username)) {
+            throw new IllegalArgumentException("Token does not match the username");
+        }
+
+        AppUser user = userMapper.toEntity(userDto);
+
+        // Log logout history and blacklist token
+        logLogoutHistory(request, user, time, LoginStatus.LOGGED_OUT);
         jwtBlacklistService.blacklistToken(token);
+
     }
 
+
+    /////////////////////////////////////////////////////
+
+    // Loggin functions
     private void logLoginAttempt(AppUser appUser, LocalDateTime time, AttemptStatus status) {
         try {
             LoginAttempt attempt = new LoginAttempt();
             attempt.setAppUser(appUser);
             attempt.setDateTime(time);
             attempt.setLoginStatus(status);
+
+            if(status == AttemptStatus.FAILURE) {
+                // Increment failed attempts
+                loginAttemptService.incrementFailedAttempts(appUser);
+            }
+
             securityEventService.saveLoginAttempt(attempt);
         } catch (Exception e) {
-            handleException("Error during login attempt logging", e);
+            handleException("Error during login attempt loggin", e);
         }
     }
 
@@ -145,21 +186,23 @@ public class AuthService {
         }
     }
 
-    private void logLogoutHistory(AppUser appUser, String token) {
+    private void logLogoutHistory(LogoutRequest request, AppUser appUser, LocalDateTime time, LoginStatus status) {
         try {
             LoginHistory history = new LoginHistory();
+            history.setDevice(request.device());
+            history.setLocation(request.location());
             history.setAppUser(appUser);
-            history.setDateTime(LocalDateTime.now());
-            history.setLoginStatus(LoginStatus.LOGGED_OUT);
+            history.setDateTime(time);
+            history.setLoginStatus(status);
             securityEventService.saveLogoutHistory(history);
         } catch (Exception e) {
             handleException("Error during logout history logging", e);
         }
     }
 
+    // Handle exceptions
     private void handleException(String message, Exception e) {
         e.printStackTrace();
         throw new RuntimeException(message, e);
     }
 }
-

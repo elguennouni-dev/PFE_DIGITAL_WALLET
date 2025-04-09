@@ -36,11 +36,9 @@ public class UserService {
         return Optional.of(user);
     }
 
-    public ResponseEntity<UserDto> getByUsername(String username) {
+    public Optional<UserDto> getByUsername(String username) {
         return appUserRepository.findByUsername(username)
-                .map(userMapper::toDto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+                .map(userMapper::toDto);
     }
 
     public Optional<AppUser> findByEmail(String email) {
