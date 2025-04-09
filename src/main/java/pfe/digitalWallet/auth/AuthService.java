@@ -151,8 +151,6 @@ public class AuthService {
     }
 
 
-    /////////////////////////////////////////////////////
-
     // Loggin functions
     private void logLoginAttempt(AppUser appUser, LocalDateTime time, AttemptStatus status) {
         try {
