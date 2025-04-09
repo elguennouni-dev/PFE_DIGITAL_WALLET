@@ -1,12 +1,11 @@
 package pfe.digitalWallet.core.document;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import pfe.digitalWallet.core.document.dto.DocumentDto;
 
 import java.util.Collections;
@@ -16,47 +15,67 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/documents")
-@RequiredArgsConstructor
 public class DocumentController {
 
-    private final DocumentService documentService;
+    @Autowired
+    private DocumentService documentService;
 
-
-
+    // Get all documents by user id
     @GetMapping("/by-user-id/{app_user_id}")
     public ResponseEntity<List<DocumentDto>> getAllDocumentsByUserId(@PathVariable Long app_user_id) {
-        Optional<List<Document>> documents = documentService.getAllByUserId(app_user_id);
-        return buildDocumentResponse(documents);
-    }
-
-    @GetMapping("/by-title/{title}")
-    public ResponseEntity<List<DocumentDto>> getAllDocumentsByTitle(@PathVariable String title) {
-        Optional<List<Document>> documents = documentService.getAllByTitle(title);
-        return buildDocumentResponse(documents);
-    }
-
-    private ResponseEntity<List<DocumentDto>> buildDocumentResponse(Optional<List<Document>> documents) {
-        if (documents.isPresent()) {
-            List<DocumentDto> documentDtos = documents.get().stream()
-                    .map(this::mapToDto)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(documentDtos);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+        List<DocumentDto> documents = documentService.getAllByUserId(app_user_id);
+        if (documents.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.ok(documents);
     }
 
-    private DocumentDto mapToDto(Document document) {
-        return new DocumentDto(
-                document.getId(),
-                document.getCreatedAt(),
-                document.getDocumentFile(),
-                document.getDocumentTitle(),
-                document.getDownloadCount(),
-                document.getRsaKey(),
-                document.getViewCount(),
-                document.getAppUser().getId()
-        );
+    // Get a document by id
+    @GetMapping("/{id}")
+    public ResponseEntity<DocumentDto> getDocumentById(@PathVariable Long id) {
+        Optional<DocumentDto> document = documentService.getDocumentById(id);
+        return document.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    // Create a new document
+    @PostMapping
+    public ResponseEntity<DocumentDto> createDocument(@RequestBody @Valid DocumentDto documentDto) {
+        DocumentDto createdDocument = documentService.createDocument(documentDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdDocument);
+    }
+
+    // Update an existing document
+    @PutMapping("/{id}")
+    public ResponseEntity<DocumentDto> updateDocument(@PathVariable Long id, @RequestBody @Valid DocumentDto documentDto) {
+        Optional<DocumentDto> updatedDocument = documentService.updateDocument(id, documentDto);
+        return updatedDocument.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Increment view count
+    @PatchMapping("/{id}/increment-view")
+    public ResponseEntity<DocumentDto> incrementViewCount(@PathVariable Long id) {
+        Optional<DocumentDto> updatedDocument = documentService.incrementViewCount(id);
+        return updatedDocument.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Increment download count
+    @PatchMapping("/{id}/increment-download")
+    public ResponseEntity<DocumentDto> incrementDownloadCount(@PathVariable Long id) {
+        Optional<DocumentDto> updatedDocument = documentService.incrementDownloadCount(id);
+        return updatedDocument.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Delete a document
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable Long id) {
+        boolean isDeleted = documentService.deleteDocument(id);
+        return isDeleted ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
 }
 
