@@ -25,7 +25,7 @@ public class DocumentService {
     @Autowired
     private UserService userService;
 
-    public void saveDocument(DocumentDao documentDao) throws IOException {
+    public DocumentDto saveDocument(DocumentDao documentDao) throws IOException {
         byte[] documentBytes = documentDao.file().getBytes();
 
         Document document = new Document();
@@ -37,7 +37,7 @@ public class DocumentService {
         document.setRsaKey("AAAAAAAAAAAAAAAAAAA");
         document.setAppUser(userService.findById(documentDao.appUserId()).get());
 
-        documentRepository.save(document);
+        return documentMapper.toDocumentDto(documentRepository.save(document));
     }
 
     public List<DocumentDto> getAllByUserId(Long userId) {
@@ -48,12 +48,6 @@ public class DocumentService {
     public Optional<DocumentDto> getDocumentById(Long id) {
         return documentRepository.findById(id)
                 .map(documentMapper::toDocumentDto); // Optional handling
-    }
-
-    public DocumentDto createDocument(DocumentDto documentDto) {
-        Document document = documentMapper.toDocument(documentDto);
-        Document savedDocument = documentRepository.save(document);
-        return documentMapper.toDocumentDto(savedDocument); // Return saved document as DTO
     }
 
     public Optional<DocumentDto> updateDocument(Long id, DocumentDto documentDto) {

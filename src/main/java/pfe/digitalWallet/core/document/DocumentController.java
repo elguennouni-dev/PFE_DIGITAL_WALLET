@@ -24,12 +24,11 @@ public class DocumentController {
 
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadDocument(@RequestBody DocumentDao documentDao) {
+    public ResponseEntity<DocumentDto> uploadDocument(@RequestBody DocumentDao documentDao) {
         try {
-            documentService.saveDocument(documentDao);
-            return ResponseEntity.ok("File uploaded successfully!");
+            return ResponseEntity.ok(documentService.saveDocument(documentDao));
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Error while uploading file: " + e.getMessage());
+            return ResponseEntity.status(500).body(null);
         }
     }
 

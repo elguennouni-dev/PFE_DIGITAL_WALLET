@@ -12,6 +12,8 @@ import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginattempt.LoginAttemptService;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
+import pfe.digitalWallet.core.rsaKey.RSAKey;
+import pfe.digitalWallet.core.rsaKey.RSAKeyService;
 import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
@@ -19,6 +21,7 @@ import pfe.digitalWallet.shared.enums.login.LoginStatus;
 import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 import pfe.digitalWallet.shared.validation.PasswordValidator;
 
+import java.security.KeyPair;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -41,6 +44,8 @@ public class AuthService {
     private UserMapper userMapper;
     @Autowired
     private LoginAttemptService loginAttemptService;
+    @Autowired
+    private RSAKeyService rsaKeyService;
 
 
     // Handle login
@@ -109,6 +114,21 @@ public class AuthService {
 
             String token = jwtUtil.generateToken(request.username());
             UserDto userDto = userMapper.toDto(savedUser.get()).withToken(token);
+
+            // RSAKey
+            KeyPair keyPair = rsaKeyService.generateKeyPair();
+            String publicKey = rsaKeyService.encodeKey(keyPair.getPublic());
+            String privateKey = rsaKeyService.encodeKey(keyPair.getPrivate());
+
+            // Store RSAKey
+            RSAKey rsaKey = new RSAKey();
+            rsaKey.setUser(savedUser.get());
+            rsaKey.setPublicKey(publicKey);
+            rsaKey.setPrivateKeyEncrypted(privateKey);
+            rsaKey.setCreatedAt(time);
+
+            rsaKeyService.save(rsaKey);
+
             return Optional.of(userDto);
 
         } catch (Exception e) {

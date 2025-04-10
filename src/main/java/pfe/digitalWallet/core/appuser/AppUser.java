@@ -3,13 +3,12 @@ package pfe.digitalWallet.core.appuser;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import pfe.digitalWallet.core.document.Document;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
+import pfe.digitalWallet.core.rsaKey.RSAKey;
 import pfe.digitalWallet.core.session.Session;
 
 import java.time.LocalDateTime;
@@ -52,6 +51,9 @@ public class AppUser {
     @PastOrPresent(message = "Update date-time cannot be in the future")
     private LocalDateTime updatedAt;
 
+    private boolean isLocked;
+    private LocalDateTime lockUntil;
+
     @Valid
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions = new ArrayList<>();
@@ -67,5 +69,11 @@ public class AppUser {
     @Valid
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LoginHistory> loginHistories = new ArrayList<>();
+
+
+    // RSA Key
+    @Valid
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RSAKey rsaKey;
 
 }
