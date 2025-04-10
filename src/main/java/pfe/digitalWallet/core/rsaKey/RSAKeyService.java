@@ -2,6 +2,7 @@ package pfe.digitalWallet.core.rsaKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pfe.digitalWallet.core.appuser.AppUser;
 
 import java.security.Key;
 import java.security.KeyPair;
@@ -22,18 +23,10 @@ public class RSAKeyService {
         rsaKeyRepo.save(rsaKey);
     }
 
-    public KeyPair generateKeyPair() {
-        try {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-            generator.initialize(KEY_SIZE);
-            return generator.generateKeyPair();
-        } catch (Exception e) {
-            throw new RuntimeException("Error generating RSA Key pair",e);
-        }
+    public Optional<RSAKey> getKeyByUser(AppUser user) {
+        return rsaKeyRepo.findByUser(user);
     }
 
-    public String encodeKey(Key key) {
-        return Base64.getEncoder().encodeToString(key.getEncoded());
-    }
+
 
 }

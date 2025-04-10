@@ -14,6 +14,7 @@ import pfe.digitalWallet.core.loginattempt.LoginAttemptService;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.core.rsaKey.RSAKey;
 import pfe.digitalWallet.core.rsaKey.RSAKeyService;
+import pfe.digitalWallet.core.rsaKey.util.RSAUtil;
 import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
@@ -116,9 +117,9 @@ public class AuthService {
             UserDto userDto = userMapper.toDto(savedUser.get()).withToken(token);
 
             // RSAKey
-            KeyPair keyPair = rsaKeyService.generateKeyPair();
-            String publicKey = rsaKeyService.encodeKey(keyPair.getPublic());
-            String privateKey = rsaKeyService.encodeKey(keyPair.getPrivate());
+            KeyPair keyPair = RSAUtil.generateKeyPair();
+            String publicKey = RSAUtil.encodeKey(keyPair.getPublic());
+            String privateKey = RSAUtil.encodeKey(keyPair.getPrivate());
 
             // Store RSAKey
             RSAKey rsaKey = new RSAKey();
