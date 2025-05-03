@@ -4,10 +4,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import pfe.digitalWallet.core.appuser.AppUser;
+import pfe.digitalWallet.core.document.dto.DocumentDto;
+import pfe.digitalWallet.core.loginattempt.dto.LoginAttemptDto;
+import pfe.digitalWallet.core.loginhistory.dto.LoginHistoryDto;
+import pfe.digitalWallet.core.rsaKey.dto.RSAKeyDto;
+import pfe.digitalWallet.core.session.dto.SessionDto;
 
 import java.time.LocalDateTime;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record UserDto (
         Long id,
@@ -17,7 +23,14 @@ public record UserDto (
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         boolean isLocked,
-        LocalDateTime lockUntil
+        LocalDateTime lockUntil,
+
+        /// ////////////////////
+        List<SessionDto> sessions,
+        List<LoginAttemptDto> loginAttempts,
+        List<DocumentDto> documents,
+        List<LoginHistoryDto> loginHistories,
+        RSAKeyDto rsaKey
 ) {
     public UserDto withUsername(String newUsername) {
         return new UserDto(this.id, newUsername, this.email, this.token, this.createdAt, this.updatedAt, this.isLocked, this.lockUntil);

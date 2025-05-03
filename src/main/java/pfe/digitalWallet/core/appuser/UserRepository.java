@@ -10,8 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<AppUser, Long> {
-    @Query("SELECT DISTINCT u FROM AppUser u JOIN FETCH u.loginAttempts WHERE u.username = :username")
-    Optional<AppUser> findByUsername(@Param("username") String username);
+    @Query("SELECT u FROM AppUser u WHERE u.username = :username")
+    AppUser findByUsername(@Param("username") String username);
+
 
     AppUser findByEmail(String email);
     AppUser findByUsernameAndPassword(String username, String password);

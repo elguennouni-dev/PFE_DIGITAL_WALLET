@@ -17,9 +17,8 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    // Login handling
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserDto>> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest loginRequest) {
         try {
             Optional<UserDto> userDtoOptional = authService.login(loginRequest);
             return userDtoOptional.map(userDto -> buildResponse(true, "Login successful", userDto, HttpStatus.OK))
@@ -29,41 +28,36 @@ public class AuthController {
         }
     }
 
-    // Signup handling
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<UserDto>> signup(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<ApiResponse<?>> signup(@RequestBody SignupRequest signupRequest) {
         try {
-            Optional<UserDto> userDtoOptional = authService.signup(signupRequest);
-            return userDtoOptional.map(userDto -> buildResponse(true, "Signup successful", userDto, HttpStatus.CREATED))
-                    .orElseGet(() -> buildResponse(false, "Username or email already taken", null, HttpStatus.CONFLICT));
+            Optional<SignupResponse> signupResponse = authService.signup(signupRequest);
+            if (signupResponse.isPresent()) {
+                return buildResponse(true, "Signup successful", signupResponse.get(), HttpStatus.OK);
+            } else {
+                return buildResponse(false, "Username or email already exists", null, HttpStatus.CONFLICT);
+            }
         } catch (Exception e) {
             return buildResponse(false, "Internal Server Error: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Logout handling
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<?>> logout(@RequestBody LogoutRequest logoutRequest) {
         try {
             authService.logout(logoutRequest);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Logout successful", null));
+            return buildResponse(true, "Logout successful", null, HttpStatus.OK);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new ApiResponse<>(false, "Error during logout: " + e.getMessage(), null)
-            );
+            return buildResponse(false, "Error during logout: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Private helper methods
-    private ResponseEntity<ApiResponse<UserDto>> buildResponse(boolean success, String message, UserDto data, HttpStatus status) {
+    private ResponseEntity<ApiResponse<?>> buildResponse(boolean success, String message, Object data, HttpStatus status) {
         return ResponseEntity.status(status).body(new ApiResponse<>(success, message, data));
     }
 
-    // Exception Handling
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ApiResponse<>(false, "An unexpected error occurred: " + e.getMessage(), null)
-        );
+        return buildResponse(false, "An unexpected error occurred: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

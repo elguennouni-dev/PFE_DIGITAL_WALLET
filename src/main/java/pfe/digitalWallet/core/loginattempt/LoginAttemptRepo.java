@@ -8,5 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface LoginAttemptRepo extends JpaRepository<LoginAttempt, Long> {
-    LoginAttempt findByAppUser(AppUser appUser);
+//    LoginAttempt findByAppUser(AppUser appUser);
+
+    LoginAttempt findTopByAppUserOrderByDateTimeDesc(AppUser appUser);
 }

@@ -19,8 +19,8 @@ public class RSAKeyService {
     private RSAKeyRepo rsaKeyRepo;
 
 
-    public void save(RSAKey rsaKey) {
-        rsaKeyRepo.save(rsaKey);
+    public RSAKey save(RSAKey rsaKey) {
+        return rsaKeyRepo.save(rsaKey);
     }
 
     public Optional<RSAKey> getKeyByUser(AppUser user) {

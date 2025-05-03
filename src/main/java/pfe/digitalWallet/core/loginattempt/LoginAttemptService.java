@@ -61,7 +61,7 @@ public class LoginAttemptService {
     }
 
     public LoginAttempt getByUser(AppUser user) {
-        return loginAttemptRepo.findByAppUser(user);
+        return loginAttemptRepo.findTopByAppUserOrderByDateTimeDesc(user);
     }
 
     public void resetFailedAttempts(AppUser user) {

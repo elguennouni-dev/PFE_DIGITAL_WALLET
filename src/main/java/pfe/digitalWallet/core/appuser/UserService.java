@@ -1,5 +1,6 @@
 package pfe.digitalWallet.core.appuser;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,8 +38,12 @@ public class UserService {
     }
 
     public Optional<UserDto> getByUsername(String username) {
-        return appUserRepository.findByUsername(username)
-                .map(userMapper::toDto);
+        AppUser user = appUserRepository.findByUsername(username);
+        if (user != null && user.getRsaKey() != null) {
+            Hibernate.initialize(user.getRsaKey().getPrivateKeyEncrypted());
+            Hibernate.initialize(user.getRsaKey().getPublicKey());
+        }
+        return Optional.of(userMapper.toDto(user));
     }
 
     public Optional<AppUser> findByEmail(String email) {

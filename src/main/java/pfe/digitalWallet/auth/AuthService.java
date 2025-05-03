@@ -3,6 +3,7 @@ package pfe.digitalWallet.auth;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pfe.digitalWallet.auth.jwt.JwtBlacklistService;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.core.appuser.AppUser;
@@ -14,9 +15,12 @@ import pfe.digitalWallet.core.loginattempt.LoginAttemptService;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.core.rsaKey.RSAKey;
 import pfe.digitalWallet.core.rsaKey.RSAKeyService;
+import pfe.digitalWallet.core.rsaKey.dto.RSAKeyDto;
+import pfe.digitalWallet.core.rsaKey.mapper.RSAKeyMapper;
 import pfe.digitalWallet.core.rsaKey.util.RSAUtil;
 import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
+import pfe.digitalWallet.shared.dto.SignupResponse;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
 import pfe.digitalWallet.core.appuser.mapper.UserMapper;
@@ -47,13 +51,29 @@ public class AuthService {
     private LoginAttemptService loginAttemptService;
     @Autowired
     private RSAKeyService rsaKeyService;
+    @Autowired
+    private RSAKeyMapper rsaKeyMapper;
 
 
     // Handle login
     public Optional<UserDto> login(LoginRequest request) {
+        System.out.println("Request => {\n" +
+                "\tusername: " + request.username() +
+                "\tpassword: " + request.password() +
+                "\tdevice: " + request.device() +
+                "\tlocation: " + request.location() +
+                "\n}");
+
         LocalDateTime time = LocalDateTime.now();
+
+        System.out.println("Time: " + time);
+
         Optional<UserDto> optionalUserDto = userService.getByUsername(request.username());
+
+        System.out.println("User Found: " + optionalUserDto.toString());
+
         if(optionalUserDto.isEmpty()) {
+            System.out.println("User not found!");
             return Optional.empty();
         }
 
@@ -90,12 +110,11 @@ public class AuthService {
     }
 
 
-    // Handle signup
-    public Optional<UserDto> signup(SignupRequest request) {
+    @Transactional
+    public Optional<SignupResponse> signup(SignupRequest request) {
         LocalDateTime time = LocalDateTime.now();
 
-        // Check if username or email already exists
-        if(userService.getByUsername(request.username()).isPresent() || userService.findByEmail(request.email()).isPresent()) {
+        if (userService.getByUsername(request.username()).isPresent() || userService.findByEmail(request.email()).isPresent()) {
             return Optional.empty();
         }
 
@@ -109,37 +128,44 @@ public class AuthService {
             appUser.setPassword(encodedPassword);
 
             Optional<AppUser> savedUser = userService.save(appUser);
-            if(savedUser.isEmpty()) {
+            if (savedUser.isEmpty()) {
                 return Optional.empty();
             }
 
             String token = jwtUtil.generateToken(request.username());
             UserDto userDto = userMapper.toDto(savedUser.get()).withToken(token);
 
-            // RSAKey
             KeyPair keyPair = RSAUtil.generateKeyPair();
             String publicKey = RSAUtil.encodeKey(keyPair.getPublic());
             String privateKey = RSAUtil.encodeKey(keyPair.getPrivate());
 
-            // Store RSAKey
             RSAKey rsaKey = new RSAKey();
             rsaKey.setUser(savedUser.get());
             rsaKey.setPublicKey(publicKey);
             rsaKey.setPrivateKeyEncrypted(privateKey);
             rsaKey.setCreatedAt(time);
 
-            rsaKeyService.save(rsaKey);
+            RSAKeyDto rsaKeyDto = rsaKeyMapper.toRSAKeyDTO(rsaKeyService.save(rsaKey));
 
-            return Optional.of(userDto);
+            SignupResponse signupResponse = new SignupResponse(
+                    userDto.id(),
+                    userDto.username(),
+                    userDto.email(),
+                    userDto.token(),
+                    userDto.createdAt(),
+                    userDto.updatedAt(),
+                    userDto.isLocked(),
+                    userDto.lockUntil(),
+                    rsaKeyDto.publicKey()
+            );
+
+            return Optional.of(signupResponse);
 
         } catch (Exception e) {
             handleException("Error during signup process", e);
+            return Optional.empty();
         }
-
-        return Optional.empty();
-
     }
-
 
 
     // Handle logput
