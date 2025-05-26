@@ -1,45 +1,53 @@
 package pfe.digitalWallet.auth;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginattempt.LoginAttemptService;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
 import pfe.digitalWallet.core.loginhistory.LoginHistoryService;
-import pfe.digitalWallet.shared.enums.login.LoginStatus;
 
 @Service
 public class SecurityEventService {
 
-    private final LoginAttemptService loginAttemptService;
-    private final LoginHistoryService loginHistoryService;
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+    @Autowired
+    private LoginHistoryService loginHistoryService;
 
-    public SecurityEventService(LoginAttemptService loginAttemptService, LoginHistoryService loginHistoryService) {
-        this.loginAttemptService = loginAttemptService;
-        this.loginHistoryService = loginHistoryService;
-    }
 
-    // Handle attempts
+    // Handle login attempts
     public void saveLoginAttempt(LoginAttempt attempt) {
+        if (attempt == null || attempt.getAppUser() == null) {
+            throw new IllegalArgumentException("Invalid LoginAttempt data");
+        }
         this.loginAttemptService.save(attempt);
     }
 
-    // Handle histories
+    // Handle login histories
     public void saveLoginHistory(LoginHistory history) {
-        this.loginHistoryService.save(history);
+        validateLoginHistory(history);
+        try {
+            this.loginHistoryService.save(history);
+        } catch (Exception e) {
+            throw new RuntimeException("Error occurred while saving login history for user: " + history.getAppUser().getUsername(), e);
+        }
     }
 
     // Handle logouts
     public void saveLogoutHistory(LoginHistory history) {
-        this.loginHistoryService.save(history);
+        validateLoginHistory(history);
+        try {
+            this.loginHistoryService.save(history);
+        } catch (Exception e) {
+            throw new RuntimeException("Error occurred while saving logout history for user: " + history.getAppUser().getUsername(), e);
+        }
     }
 
-
-//    public void logSuccessfulLogout(String username) {
-//        LoginHistory history = loginHistoryService.getByUser_Username(username)
-//                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-//        history.setLoginStatus(LoginStatus.LOGGED_OUT);
-//        loginHistoryService.save(history);
-//    }
-
-
+    // Common validation for login and logout history
+    private void validateLoginHistory(LoginHistory history) {
+        if (history == null || history.getAppUser() == null || history.getLoginStatus() == null) {
+            throw new IllegalArgumentException("Invalid LoginHistory data");
+        }
+    }
 }

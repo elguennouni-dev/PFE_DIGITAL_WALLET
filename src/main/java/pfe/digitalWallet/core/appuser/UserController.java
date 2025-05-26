@@ -1,51 +1,62 @@
 package pfe.digitalWallet.core.appuser;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
-import pfe.digitalWallet.shared.dto.ApiResponse;
-import pfe.digitalWallet.shared.dto.LoginRequest;
-import pfe.digitalWallet.shared.dto.UserDto;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
+import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/appuser")
+@RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private UserService appUserService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final UserService appUserService;
+    private final UserMapper userMapper;
+    private final JwtUtil jwtUtil;
 
-    @GetMapping("/login")
-    public ResponseEntity<ApiResponse<UserDto>> login(@RequestBody LoginRequest request) {
-        Optional<AppUser> optionalUser = appUserService.login(request.getUsername(), request.getPassword());
 
-        if (optionalUser.isPresent()) {
-            UserDto dto = UserDto.from(optionalUser.get());
-            String token = jwtUtil.generateToken(dto.getUsername());
-            dto.setToken(token);
+    @GetMapping
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<UserDto> users = appUserService.getAll()
+                .stream()
+                .filter(user -> user instanceof AppUser)
+                .map(user -> userMapper.toDto((AppUser) user))
+                .collect(Collectors.toList());
 
-            ApiResponse<UserDto> response = new ApiResponse<>();
-            response.setSuccess(true);
-            response.setMessage("Login successful");
-            response.setData(dto);
-
-            return ResponseEntity.ok(response);
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(users);
         } else {
-            ApiResponse<UserDto> response = new ApiResponse<>();
-            response.setSuccess(false);
-            response.setMessage("Invalid username or password");
-            response.setData(null);
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.ok(users);
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        return appUserService.findById(id)
+                .map(userMapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+    }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
+        return (appUserService.getByUsername(username).isPresent()) ?
+                ResponseEntity.ok(userMapper.toDto(appUserService.getByUsername(username).get())) :
+                ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @GetMapping("/{email}")
+    public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
+        return appUserService.findByEmail(email)
+                .map(userMapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+    }
 
 }

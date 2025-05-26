@@ -27,6 +27,12 @@ public class LoginAttempt {
     @Column(nullable = false)
     private AttemptStatus loginStatus;
 
+
+    private int failedAttempts;
+
+    @PastOrPresent(message = "Login attempt date-time cannot be in the future")
+    private LocalDateTime lastFailedAttempt;
+
     @Valid
     @ManyToOne
     @JoinColumn(name = "app_user_id", nullable = false)

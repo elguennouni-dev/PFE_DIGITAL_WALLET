@@ -1,9 +1,11 @@
 package pfe.digitalWallet.core.appuser;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pfe.digitalWallet.shared.dto.UserDto;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
+import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,8 @@ public class UserService {
     @Autowired
     private UserRepository appUserRepository;
 
+    @Autowired
+    private UserMapper userMapper;
 
     public Optional<AppUser> login(String username, String password) {
         AppUser user = appUserRepository.findByUsernameAndPassword(username,password);
@@ -32,7 +36,17 @@ public class UserService {
     }
 
     public Optional<AppUser> getByUsername(String username) {
+
+        System.out.println("Username for service : " + username);
+
         AppUser user = appUserRepository.findByUsername(username);
+
+        System.out.println(user.toString());
+
+//        if (user != null && user.getRsaKey() != null) {
+//            Hibernate.initialize(user.getRsaKey().getPrivateKeyEncrypted());
+//            Hibernate.initialize(user.getRsaKey().getPublicKey());
+//        }
         return Optional.ofNullable(user);
     }
 

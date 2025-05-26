@@ -1,197 +1,290 @@
 package pfe.digitalWallet.auth;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pfe.digitalWallet.auth.jwt.JwtBlacklistService;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.core.appuser.UserService;
+import pfe.digitalWallet.core.appuser.dao.LoginRequest;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
+import pfe.digitalWallet.core.loginattempt.LoginAttemptService;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
-import pfe.digitalWallet.shared.dto.LoginRequest;
+import pfe.digitalWallet.core.rsaKey.RSAKey;
+import pfe.digitalWallet.core.rsaKey.RSAKeyService;
+import pfe.digitalWallet.core.rsaKey.dto.RSAKeyDto;
+import pfe.digitalWallet.core.rsaKey.mapper.RSAKeyMapper;
+import pfe.digitalWallet.core.rsaKey.util.RSAUtil;
 import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
-import pfe.digitalWallet.shared.dto.UserDto;
+import pfe.digitalWallet.shared.dto.SignupResponse;
 import pfe.digitalWallet.shared.enums.attempt.AttemptStatus;
 import pfe.digitalWallet.shared.enums.login.LoginStatus;
+import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 import pfe.digitalWallet.shared.validation.PasswordValidator;
 
+import java.security.KeyPair;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class AuthService {
 
-    private final JwtUtil jwtUtil;
-    private final UserService userService;
-    private final PasswordValidator passwordValidator;
-    private final SecurityEventService securityEventService;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private PasswordValidator passwordValidator;
+    @Autowired
+    private SecurityEventService securityEventService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtBlacklistService jwtBlacklistService;
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+    @Autowired
+    private RSAKeyService rsaKeyService;
+    @Autowired
+    private RSAKeyMapper rsaKeyMapper;
 
-    private final JwtBlacklistService jwtBlacklistService;
 
-    public AuthService(
-            JwtUtil jwtUtil,
-            UserService userService,
-            PasswordValidator passwordValidator,
-            SecurityEventService securityEventService,
-            PasswordEncoder passwordEncoder,
-            JwtBlacklistService jwtBlacklistService) {
-        this.jwtUtil = jwtUtil;
-        this.userService = userService;
-        this.passwordValidator = passwordValidator;
-        this.securityEventService = securityEventService;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtBlacklistService = jwtBlacklistService;
-    }
-
+    // Handle login
     public Optional<UserDto> login(LoginRequest request) {
         LocalDateTime time = LocalDateTime.now();
-
-        // Check if user exists
-        Optional<AppUser> appUserOptional = userService.getByUsername(request.getUsername());
-        if (appUserOptional.isEmpty()) {
+        Optional<AppUser> optionalUserDto = userService.getByUsername(request.username());
+        if(optionalUserDto.isEmpty()) {
+            System.out.println("User not found!");
             return Optional.empty();
         }
 
-        AppUser appUser = appUserOptional.get();
+        UserDto userDto = null;
+        AppUser userEntity = userMapper.toEntity(userDto);
+        LoginAttempt attempt = loginAttemptService.getByUser(userEntity);
+
+        // Check login attempts
+        if(attempt != null && attempt.getFailedAttempts() >= 5 && attempt.getLastFailedAttempt().isAfter(LocalDateTime.now().minusMinutes(15))) {
+            throw new IllegalArgumentException("Your account is locked due too many login attempts. Please tru again later.");
+        }
+
+        // Verify password
+        if(!passwordValidator.isValidPassword(request.password(), userDto.id())) {
+            logLoginAttempt(userEntity, time, AttemptStatus.FAILURE);
+            return Optional.empty();
+        }
+
+        loginAttemptService.resetFailedAttempts(userEntity);
 
         try {
-            // Check password securely
-            if (!passwordValidator.isValidPassword(request.getPassword(), appUser.getId())) {
-                try {
-                    LoginAttempt attempt = new LoginAttempt();
-                    attempt.setAppUser(appUser);
-                    attempt.setDateTime(time);
-                    attempt.setLoginStatus(AttemptStatus.FAILURE);
-                    securityEventService.saveLoginAttempt(attempt);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            String token = jwtUtil.generateToken(userDto.username());
+            UserDto updatedUser = userDto.withToken(token);
 
-                return Optional.empty();
-            }
+            // Save login history and login attempt
+            logLoginHistory(request, userEntity, time, LoginStatus.LOGGED_IN);
+            logLoginAttempt(userEntity, time, AttemptStatus.SUCCESS);
+            return Optional.of(updatedUser);
 
-            try {
-                // Generate JWT token
-                String token = jwtUtil.generateToken(appUser.getUsername());
-
-                // Convert user to DTO and set token
-                UserDto userDto = UserDto.from(appUser);
-                userDto.setToken(token);
-
-                // Save login history
-                try {
-                    LoginHistory history = new LoginHistory();
-                    history.setDevice(request.getDevice());
-                    history.setLocation(request.getLocation());
-                    history.setAppUser(appUser);
-                    history.setDateTime(time);
-                    history.setLoginStatus(LoginStatus.LOGGED_IN);
-                    securityEventService.saveLoginHistory(history);
-                } catch (Exception e) {
-                    e.printStackTrace();
-
-                }
-
-                return Optional.of(userDto);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException("Error during token generation", e);
-            }
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error during login process", e);
+            handleException("Error during token generation", e);
+            return Optional.empty();
         }
     }
 
 
-
-    public Optional<UserDto> signup(SignupRequest request) {
+    @Transactional
+    public Optional<SignupResponse> signup(SignupRequest request) {
+        System.out.println("Starting signup process for username: " + request.username());
         LocalDateTime time = LocalDateTime.now();
 
-        // Check if username exists
-        Optional<AppUser> existingUsername = userService.getByUsername(request.getUsername());
-        if (existingUsername.isPresent()) {
+        // Enhanced user existence check with debug
+        System.out.println("Checking if username exists...");
+        Optional<AppUser> existingUser = userService.getByUsername(request.username());
+        if (existingUser.isPresent()) {
+            System.out.println("Username already exists: " + request.username());
             return Optional.empty();
         }
 
-        // Check if email exists
-        Optional<AppUser> existingEmail = userService.findByEmail(request.getEmail());
+        System.out.println("Checking if email exists...");
+        Optional<AppUser> existingEmail = userService.findByEmail(request.email());
         if (existingEmail.isPresent()) {
+            System.out.println("Email already exists: " + request.email());
             return Optional.empty();
         }
 
         try {
-            // Encode password
-            String encodedPassword = passwordEncoder.encode(request.getPassword());
-
+            // Create new user
+            System.out.println("Creating new user...");
+            String encodedPassword = passwordEncoder.encode(request.password());
             AppUser appUser = new AppUser();
-            appUser.setUsername(request.getUsername());
-            appUser.setEmail(request.getEmail());
+            appUser.setUsername(request.username());
+            appUser.setEmail(request.email());
             appUser.setCreatedAt(time);
             appUser.setUpdatedAt(time);
             appUser.setPassword(encodedPassword);
+            System.out.println("User object created with username: " + appUser.getUsername());
 
             // Save user
+            System.out.println("Saving user...");
             Optional<AppUser> savedUser = userService.save(appUser);
+            if (savedUser.isEmpty() || savedUser.get().getId() == null) {
+                System.out.println("Failed to save user or user ID is null");
+                return Optional.empty();
+            }
+            System.out.println("User saved with ID: " + savedUser.get().getId());
 
-            if (savedUser.isEmpty()) {
+            // Generate token
+            System.out.println("Generating JWT token...");
+            String token = jwtUtil.generateToken(request.username());
+
+            // Map to DTO
+            System.out.println("Mapping to DTO...");
+            UserDto userDto = userMapper.toDto(savedUser.get());
+            if (userDto == null) {
+                System.out.println("User DTO mapping failed");
                 return Optional.empty();
             }
 
-            try {
-                // Generate JWT token
-                String token = jwtUtil.generateToken(request.getUsername());
+            // Generate RSA keys
+            System.out.println("Generating RSA keys...");
+            KeyPair keyPair = RSAUtil.generateKeyPair();
+            String publicKey = RSAUtil.encodeKey(keyPair.getPublic());
+            String privateKey = RSAUtil.encodeKey(keyPair.getPrivate());
 
-                UserDto userDto = UserDto.from(savedUser.get());
-                userDto.setToken(token);
+            // Save RSA keys
+            System.out.println("Saving RSA keys...");
+            RSAKey rsaKey = new RSAKey();
+            rsaKey.setUser(savedUser.get());
+            rsaKey.setPublicKey(publicKey);
+            rsaKey.setPrivateKeyEncrypted(privateKey);
+            rsaKey.setCreatedAt(time);
 
-                return Optional.of(userDto);
-            } catch (Exception e) {
-                e.printStackTrace();
-                userService.deleteById(savedUser.get().getId());
-                throw new RuntimeException("Error during token generation", e);
+            RSAKey savedRsaKey = rsaKeyService.save(rsaKey);
+            if (savedRsaKey == null) {
+                System.out.println("Failed to save RSA keys");
+                return Optional.empty();
             }
+
+            RSAKeyDto rsaKeyDto = rsaKeyMapper.toRSAKeyDTO(savedRsaKey);
+            if (rsaKeyDto == null) {
+                System.out.println("RSAKey DTO mapping failed");
+                return Optional.empty();
+            }
+
+            // Build response
+            System.out.println("Building response...");
+            SignupResponse signupResponse = new SignupResponse(
+                    Objects.requireNonNull(userDto.id(), "User ID cannot be null"),
+                    Objects.requireNonNull(userDto.username(), "Username cannot be null"),
+                    Objects.requireNonNull(userDto.email(), "Email cannot be null"),
+                    token,
+                    Objects.requireNonNull(userDto.createdAt(), "CreatedAt cannot be null"),
+                    Objects.requireNonNull(userDto.updatedAt(), "UpdatedAt cannot be null"),
+                    userDto.isLocked(),
+                    userDto.lockUntil(),
+                    Objects.requireNonNull(rsaKeyDto.publicKey(), "Public key cannot be null")
+            );
+
+            System.out.println("Signup successful for user: " + userDto.username());
+            return Optional.of(signupResponse);
+
         } catch (Exception e) {
+            System.out.println("Signup failed with error: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("Error during signup process", e);
+            return Optional.empty();
         }
     }
 
 
+    // Handle logput
     public void logout(LogoutRequest request) {
-        String token = request.getToken();
+        LocalDateTime time = LocalDateTime.now();
+        String token = request.token();
 
-        if (token == null || token.isEmpty()) {
+        if(token == null || token.isBlank()) {
             throw new IllegalArgumentException("Token is empty or invalid");
         }
 
-        String username = jwtUtil.getUsernameFromToken(token);
-
-        Optional<AppUser> user = userService.getByUsername(username);
-        if (user.isEmpty()) {
-            throw new IllegalArgumentException("User not found");
+        if (!jwtUtil.isValidToken(token)) {
+            throw new IllegalArgumentException("Token is invalid or expired");
         }
 
-        LoginHistory history = new LoginHistory();
-        history.setAppUser(user.get());
-        history.setDateTime(LocalDateTime.now());
-        history.setLoginStatus(LoginStatus.LOGGED_OUT);
-        securityEventService.saveLogoutHistory(history);
+        String username = jwtUtil.getUsernameFromToken(token);
+        UserDto userDto = userMapper.toDto(userService.getByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found")));
 
-        this.jwtBlacklistService.blacklistToken(token);
+        if(!jwtUtil.validateToken(token, username)) {
+            throw new IllegalArgumentException("Token does not match the username");
+        }
+
+        AppUser user = userMapper.toEntity(userDto);
+
+        // Log logout history and blacklist token
+        logLogoutHistory(request, user, time, LoginStatus.LOGGED_OUT);
+        jwtBlacklistService.blacklistToken(token);
+
     }
 
 
+    // Loggin functions
+    private void logLoginAttempt(AppUser appUser, LocalDateTime time, AttemptStatus status) {
+        try {
+            LoginAttempt attempt = new LoginAttempt();
+            attempt.setAppUser(appUser);
+            attempt.setDateTime(time);
+            attempt.setLoginStatus(status);
 
+            if(status == AttemptStatus.FAILURE) {
+                // Increment failed attempts
+                attempt.setLastFailedAttempt(LocalDateTime.now());
+                loginAttemptService.incrementFailedAttempts(appUser);
+            } else {
+                attempt.setLastFailedAttempt(LocalDateTime.now());
+            }
 
+            securityEventService.saveLoginAttempt(attempt);
+        } catch (Exception e) {
+            handleException("Error during login attempt loggin", e);
+        }
+    }
 
+    private void logLoginHistory(LoginRequest request, AppUser appUser, LocalDateTime time, LoginStatus status) {
+        try {
+            LoginHistory history = new LoginHistory();
+            history.setDevice(request.device());
+            history.setLocation(request.location());
+            history.setAppUser(appUser);
+            history.setDateTime(time);
+            history.setLoginStatus(status);
+            securityEventService.saveLoginHistory(history);
+        } catch (Exception e) {
+            handleException("Error during login history logging", e);
+        }
+    }
 
+    private void logLogoutHistory(LogoutRequest request, AppUser appUser, LocalDateTime time, LoginStatus status) {
+        try {
+            LoginHistory history = new LoginHistory();
+            history.setDevice(request.device());
+            history.setLocation(request.location());
+            history.setAppUser(appUser);
+            history.setDateTime(time);
+            history.setLoginStatus(status);
+            securityEventService.saveLogoutHistory(history);
+        } catch (Exception e) {
+            handleException("Error during logout history logging", e);
+        }
+    }
 
-
-
+    // Handle exceptions
+    private void handleException(String message, Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException(message, e);
+    }
 }
-
-
-

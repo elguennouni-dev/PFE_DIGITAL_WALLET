@@ -1,8 +1,11 @@
 package pfe.digitalWallet.auth;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pfe.digitalWallet.core.appuser.dao.LoginRequest;
+import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.shared.dto.*;
 
 import java.util.Optional;
@@ -11,77 +14,46 @@ import java.util.Optional;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final AuthService authService;
+    @Autowired
+    private AuthService authService;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
-
-    // Login handling
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserDto>> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest loginRequest) {
         try {
             Optional<UserDto> userDtoOptional = authService.login(loginRequest);
-
-            if (userDtoOptional.isEmpty()) {
-                return buildResponse(false, "Invalid username or password", null, HttpStatus.UNAUTHORIZED);
-            }
-
-            return buildResponse(true, "Login successful", userDtoOptional.get(), HttpStatus.OK);
+            return userDtoOptional.map(userDto -> buildResponse(true, "Login successful", userDto, HttpStatus.OK))
+                    .orElseGet(() -> buildResponse(false, "Invalid username or password", null, HttpStatus.UNAUTHORIZED));
         } catch (Exception e) {
-            return buildResponse(false, "Internal Server Error", null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return buildResponse(false, "Internal Server Error: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Signup handling
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<UserDto>> signup(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<ApiResponse<?>> signup(@RequestBody SignupRequest signupRequest) {
         try {
-            Optional<UserDto> userDtoOptional = authService.signup(signupRequest);
-
-            if (userDtoOptional.isEmpty()) {
-                return buildResponse(false, "Username or email already taken", null, HttpStatus.CONFLICT);
-            }
-
-            return buildResponse(true, "Signup successful", userDtoOptional.get(), HttpStatus.CREATED);
+            Optional<SignupResponse> signupResponse = authService.signup(signupRequest);
+            return signupResponse.map(response -> buildResponse(true, "Signup successful", response, HttpStatus.OK)).orElseGet(() -> buildResponse(false, "Username or email already exists", null, HttpStatus.CONFLICT));
         } catch (Exception e) {
-            return buildResponse(false, "Internal Server Error", null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return buildResponse(false, "Internal Server Error: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Logout handling (if needed in the future)
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<?>> logout(@RequestBody LogoutRequest logoutRequest) {
         try {
             authService.logout(logoutRequest);
-            ApiResponse<?> response = new ApiResponse<>();
-            response.setSuccess(true);
-            response.setData(null);
-            response.setMessage("Logout successful");
-            return ResponseEntity.ok(response);
+            return buildResponse(true, "Logout successful", null, HttpStatus.OK);
         } catch (Exception e) {
-            ApiResponse<?> response = new ApiResponse<>();
-            response.setSuccess(false);
-            response.setMessage("Error during logout: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return buildResponse(false, "Error during logout: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Private helper methods
-    private ResponseEntity<ApiResponse<UserDto>> buildResponse(boolean success, String message, UserDto data, HttpStatus status) {
-        ApiResponse<UserDto> response = new ApiResponse<>();
-        response.setSuccess(success);
-        response.setMessage(message);
-        response.setData(data);
-        return ResponseEntity.status(status).body(response);
+    private ResponseEntity<ApiResponse<?>> buildResponse(boolean success, String message, Object data, HttpStatus status) {
+        return ResponseEntity.status(status).body(new ApiResponse<>(success, message, data));
     }
 
-    // Private helper method for logging out
-//    private ResponseEntity<ApiResponse<?>> buildResponse(boolean success, String message, UserDto data, HttpStatus status) {
-//        ApiResponse<?> response = new ApiResponse<>();
-//        response.setSuccess(success);
-//        response.setMessage(message);
-//        response.setData(data);
-//        return ResponseEntity.status(status).body(response);
-//    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<?>> handleException(Exception e) {
+        return buildResponse(false, "An unexpected error occurred: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

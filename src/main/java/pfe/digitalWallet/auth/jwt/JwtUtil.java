@@ -54,17 +54,17 @@ public class JwtUtil {
 
     // Extract claims
     private Optional<Claims> getClaimsFromToken(String token) {
-        if (!isValidToken(token))
+        if (token == null || !token.startsWith(BEARER_PREFIX))
             return Optional.empty();
 
-        String stripedToken = stripBearerPrefix(token);
-    
+        String strippedToken = stripBearerPrefix(token);
+
         try {
             Claims claims = Jwts
                     .parserBuilder()
                     .setSigningKey(getKey())
                     .build()
-                    .parseClaimsJws(stripedToken)
+                    .parseClaimsJws(strippedToken)
                     .getBody();
             return Optional.of(claims);
         } catch (Exception e) {
@@ -117,7 +117,7 @@ public class JwtUtil {
     }
 
     public boolean isValidToken(String token) {
-        return token != null && token.startsWith(BEARER_PREFIX) && getClaimsFromToken(token).isPresent();
+        return token != null && token.startsWith(BEARER_PREFIX);
     }
 
 

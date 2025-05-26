@@ -1,11 +1,21 @@
 package pfe.digitalWallet.shared.dto;
 
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter @Setter
-public class ApiResponse<T> {
-    private boolean success;
-    private String message;
-    private T data;
+public record ApiResponse<T>(
+     boolean success,
+     String message,
+     T data
+    )
+{
+    public ApiResponse<T> withSuccess(boolean newSuccess) {
+        return new ApiResponse<>(newSuccess, this.message, this.data);
+    }
+
+    public ApiResponse<T> withMessage(String newMessage) {
+        return new ApiResponse<>(this.success, newMessage, this.data);
+    }
+
+    public ApiResponse<T> withData(T newData) {
+        return new ApiResponse<>(this.success, this.message, newData);
+    }
 }

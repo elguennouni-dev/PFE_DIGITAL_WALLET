@@ -3,12 +3,13 @@ package pfe.digitalWallet.core.appuser;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import pfe.digitalWallet.core.document.Document;
 import pfe.digitalWallet.core.loginattempt.LoginAttempt;
 import pfe.digitalWallet.core.loginhistory.LoginHistory;
+import pfe.digitalWallet.core.rsaKey.RSAKey;
 import pfe.digitalWallet.core.session.Session;
-import pfe.digitalWallet.shared.validation.annotation.ValidLocalDateTime;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,10 +17,8 @@ import java.util.List;
 
 @Table(name = "app_user")
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 public class AppUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,23 +44,15 @@ public class AppUser {
     private String email;
 
     @NotNull(message = "Creation date-time cannot be Null")
-//    @NotEmpty(message = "Creation date-time cannot be Empty")
-//    @NotBlank(message = "Creation date-time cannot be Blank")
     @PastOrPresent(message = "Creation date-time cannot be in the future")
-//    @ValidLocalDateTime(message = "Creation date-time cannot be null or in the future")
     private LocalDateTime createdAt;
 
     @NotNull(message = "Update date-time cannot be Null")
-//    @NotEmpty(message = "Update date-time cannot be Empty")
-//    @NotBlank(message = "Update date-time cannot be Blank")
     @PastOrPresent(message = "Update date-time cannot be in the future")
-//    @ValidLocalDateTime(message = "Update date-time cannot be null or in the future")
     private LocalDateTime updatedAt;
 
-//    @NotNull(message = "Token cannot be Null")
-//    @NotEmpty(message = "Token cannot be Empty")
-//    @NotBlank(message = "Token cannot be Blank")
-//    private String token;
+    private boolean isLocked;
+    private LocalDateTime lockUntil;
 
     @Valid
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -79,19 +70,10 @@ public class AppUser {
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LoginHistory> loginHistories = new ArrayList<>();
 
-    @Override
-    public String toString() {
-        return "AppUser{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", email='" + email + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", sessions=" + sessions +
-                ", loginAttempts=" + loginAttempts +
-                ", documents=" + documents +
-                ", loginHistories=" + loginHistories +
-                '}';
-    }
+
+    // RSA Key
+    @Valid
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RSAKey rsaKey;
+
 }

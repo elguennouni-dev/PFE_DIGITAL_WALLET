@@ -25,7 +25,7 @@ public class LoginHistory {
     @NotEmpty(message = "device cannot be Empty")
     @NotBlank(message = "device cannot be Blank")
     @Size(min = 2, message = "device must be at least 2 characters long")
-    private String device; // Suggested to send (No-Device-found)
+    private String device;
 
     @NotNull(message = "location cannot be Null")
     @NotEmpty(message = "location cannot be Empty")
