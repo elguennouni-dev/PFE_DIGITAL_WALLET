@@ -32,11 +32,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<?>> signup(@RequestBody SignupRequest signupRequest) {
         try {
             Optional<SignupResponse> signupResponse = authService.signup(signupRequest);
-            if (signupResponse.isPresent()) {
-                return buildResponse(true, "Signup successful", signupResponse.get(), HttpStatus.OK);
-            } else {
-                return buildResponse(false, "Username or email already exists", null, HttpStatus.CONFLICT);
-            }
+            return signupResponse.map(response -> buildResponse(true, "Signup successful", response, HttpStatus.OK)).orElseGet(() -> buildResponse(false, "Username or email already exists", null, HttpStatus.CONFLICT));
         } catch (Exception e) {
             return buildResponse(false, "Internal Server Error: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

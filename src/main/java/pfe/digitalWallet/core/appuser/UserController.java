@@ -46,9 +46,9 @@ public class UserController {
 
     @GetMapping("/{username}")
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
-        return appUserService.getByUsername(username)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        return (appUserService.getByUsername(username).isPresent()) ?
+                ResponseEntity.ok(userMapper.toDto(appUserService.getByUsername(username).get())) :
+                ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @GetMapping("/{email}")

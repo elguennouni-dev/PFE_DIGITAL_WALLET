@@ -28,6 +28,7 @@ import pfe.digitalWallet.shared.validation.PasswordValidator;
 
 import java.security.KeyPair;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -57,27 +58,14 @@ public class AuthService {
 
     // Handle login
     public Optional<UserDto> login(LoginRequest request) {
-        System.out.println("Request => {\n" +
-                "\tusername: " + request.username() +
-                "\tpassword: " + request.password() +
-                "\tdevice: " + request.device() +
-                "\tlocation: " + request.location() +
-                "\n}");
-
         LocalDateTime time = LocalDateTime.now();
-
-        System.out.println("Time: " + time);
-
-        Optional<UserDto> optionalUserDto = userService.getByUsername(request.username());
-
-        System.out.println("User Found: " + optionalUserDto.toString());
-
+        Optional<AppUser> optionalUserDto = userService.getByUsername(request.username());
         if(optionalUserDto.isEmpty()) {
             System.out.println("User not found!");
             return Optional.empty();
         }
 
-        UserDto userDto = optionalUserDto.get();
+        UserDto userDto = null;
         AppUser userEntity = userMapper.toEntity(userDto);
         LoginAttempt attempt = loginAttemptService.getByUser(userEntity);
 
@@ -112,13 +100,27 @@ public class AuthService {
 
     @Transactional
     public Optional<SignupResponse> signup(SignupRequest request) {
+        System.out.println("Starting signup process for username: " + request.username());
         LocalDateTime time = LocalDateTime.now();
 
-        if (userService.getByUsername(request.username()).isPresent() || userService.findByEmail(request.email()).isPresent()) {
+        // Enhanced user existence check with debug
+        System.out.println("Checking if username exists...");
+        Optional<AppUser> existingUser = userService.getByUsername(request.username());
+        if (existingUser.isPresent()) {
+            System.out.println("Username already exists: " + request.username());
+            return Optional.empty();
+        }
+
+        System.out.println("Checking if email exists...");
+        Optional<AppUser> existingEmail = userService.findByEmail(request.email());
+        if (existingEmail.isPresent()) {
+            System.out.println("Email already exists: " + request.email());
             return Optional.empty();
         }
 
         try {
+            // Create new user
+            System.out.println("Creating new user...");
             String encodedPassword = passwordEncoder.encode(request.password());
             AppUser appUser = new AppUser();
             appUser.setUsername(request.username());
@@ -126,43 +128,75 @@ public class AuthService {
             appUser.setCreatedAt(time);
             appUser.setUpdatedAt(time);
             appUser.setPassword(encodedPassword);
+            System.out.println("User object created with username: " + appUser.getUsername());
 
+            // Save user
+            System.out.println("Saving user...");
             Optional<AppUser> savedUser = userService.save(appUser);
-            if (savedUser.isEmpty()) {
+            if (savedUser.isEmpty() || savedUser.get().getId() == null) {
+                System.out.println("Failed to save user or user ID is null");
+                return Optional.empty();
+            }
+            System.out.println("User saved with ID: " + savedUser.get().getId());
+
+            // Generate token
+            System.out.println("Generating JWT token...");
+            String token = jwtUtil.generateToken(request.username());
+
+            // Map to DTO
+            System.out.println("Mapping to DTO...");
+            UserDto userDto = userMapper.toDto(savedUser.get());
+            if (userDto == null) {
+                System.out.println("User DTO mapping failed");
                 return Optional.empty();
             }
 
-            String token = jwtUtil.generateToken(request.username());
-            UserDto userDto = userMapper.toDto(savedUser.get()).withToken(token);
-
+            // Generate RSA keys
+            System.out.println("Generating RSA keys...");
             KeyPair keyPair = RSAUtil.generateKeyPair();
             String publicKey = RSAUtil.encodeKey(keyPair.getPublic());
             String privateKey = RSAUtil.encodeKey(keyPair.getPrivate());
 
+            // Save RSA keys
+            System.out.println("Saving RSA keys...");
             RSAKey rsaKey = new RSAKey();
             rsaKey.setUser(savedUser.get());
             rsaKey.setPublicKey(publicKey);
             rsaKey.setPrivateKeyEncrypted(privateKey);
             rsaKey.setCreatedAt(time);
 
-            RSAKeyDto rsaKeyDto = rsaKeyMapper.toRSAKeyDTO(rsaKeyService.save(rsaKey));
+            RSAKey savedRsaKey = rsaKeyService.save(rsaKey);
+            if (savedRsaKey == null) {
+                System.out.println("Failed to save RSA keys");
+                return Optional.empty();
+            }
 
+            RSAKeyDto rsaKeyDto = rsaKeyMapper.toRSAKeyDTO(savedRsaKey);
+            if (rsaKeyDto == null) {
+                System.out.println("RSAKey DTO mapping failed");
+                return Optional.empty();
+            }
+
+            // Build response
+            System.out.println("Building response...");
             SignupResponse signupResponse = new SignupResponse(
-                    userDto.id(),
-                    userDto.username(),
-                    userDto.email(),
-                    userDto.token(),
-                    userDto.createdAt(),
-                    userDto.updatedAt(),
+                    Objects.requireNonNull(userDto.id(), "User ID cannot be null"),
+                    Objects.requireNonNull(userDto.username(), "Username cannot be null"),
+                    Objects.requireNonNull(userDto.email(), "Email cannot be null"),
+                    token,
+                    Objects.requireNonNull(userDto.createdAt(), "CreatedAt cannot be null"),
+                    Objects.requireNonNull(userDto.updatedAt(), "UpdatedAt cannot be null"),
                     userDto.isLocked(),
                     userDto.lockUntil(),
-                    rsaKeyDto.publicKey()
+                    Objects.requireNonNull(rsaKeyDto.publicKey(), "Public key cannot be null")
             );
 
+            System.out.println("Signup successful for user: " + userDto.username());
             return Optional.of(signupResponse);
 
         } catch (Exception e) {
-            handleException("Error during signup process", e);
+            System.out.println("Signup failed with error: " + e.getMessage());
+            e.printStackTrace();
             return Optional.empty();
         }
     }
@@ -182,8 +216,8 @@ public class AuthService {
         }
 
         String username = jwtUtil.getUsernameFromToken(token);
-        UserDto userDto = userService.getByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        UserDto userDto = userMapper.toDto(userService.getByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found")));
 
         if(!jwtUtil.validateToken(token, username)) {
             throw new IllegalArgumentException("Token does not match the username");
