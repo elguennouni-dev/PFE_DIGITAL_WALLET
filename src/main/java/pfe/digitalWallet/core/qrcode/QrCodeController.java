@@ -3,6 +3,7 @@ package pfe.digitalWallet.core.qrcode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pfe.digitalWallet.core.qrcode.dao.QrConfirmationDAO;
 
 
 @RestController
@@ -17,8 +18,8 @@ public class QrCodeController {
     }
 
     @PostMapping("/confirm-login")
-    public ResponseEntity<?> confirmLogin(@RequestBody String qrToken, @RequestBody String jwt){
-        return ResponseEntity.ok(qrCodeService.confirmLogin(qrToken, jwt));
+    public ResponseEntity<?> confirmLogin(@RequestBody QrConfirmationDAO dao){
+        return ResponseEntity.ok(qrCodeService.confirmLogin(dao));
     }
 
     @PostMapping("/web/poll-session")

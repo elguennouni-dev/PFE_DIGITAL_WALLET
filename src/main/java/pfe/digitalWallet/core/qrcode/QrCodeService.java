@@ -8,6 +8,7 @@ import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.core.appuser.UserRepository;
 import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.core.appuser.mapper.UserMapper;
+import pfe.digitalWallet.core.qrcode.dao.QrConfirmationDAO;
 import pfe.digitalWallet.core.qrcode.dto.QrCodeDTO;
 import pfe.digitalWallet.core.qrcode.dto.QrConfirmationResponse;
 import pfe.digitalWallet.core.qrcode.mapper.QrCodeMapper;
@@ -74,8 +75,9 @@ public class QrCodeService {
 
 
 
-    public QrConfirmationResponse confirmLogin(String qrToken, String jwt) {
-        QrCode qrCode = qrCodeRepo.findByQrCodeData(qrToken)
+    public QrConfirmationResponse confirmLogin(QrConfirmationDAO dao) {
+
+        QrCode qrCode = qrCodeRepo.findByQrCodeData(dao.getQrToken())
                 .orElseThrow(() -> new NotFoundException("QR code not found"));
 
         Session session = sessionRepo.findByQrCodeId(qrCode.getId())
@@ -85,14 +87,14 @@ public class QrCodeService {
             throw new IllegalStateException("Session expired");
         }
 
-        String username = jwtUtil.getUsernameFromToken(jwt);
+        String username = jwtUtil.getUsernameFromToken(dao.getJwt());
         AppUser appUser = Optional.ofNullable(userRepo.findByUsername(username))
                 .orElseThrow(() -> new NotFoundException("User not found"));
         // Update session using a fluent builder-style update (see below)
         session = Session.builder()
                 .appUser(appUser)
                 .sessionStatus(SessionStatus.AUTHENTICATED)
-                .sessionToken(jwt)
+                .sessionToken(dao.getJwt())
                 .build();
 
         sessionRepo.save(session);
