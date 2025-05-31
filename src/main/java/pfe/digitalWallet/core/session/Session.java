@@ -21,10 +21,7 @@ public class Session {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotNull(message = "Session token date-time cannot be Null")
-    @NotEmpty(message = "Session token date-time cannot be Empty")
-    @NotBlank(message = "Session token date-time cannot be Blank")
+    
     private String sessionToken;
 
     @NotNull(message = "Session creation date-time cannot be Null")
