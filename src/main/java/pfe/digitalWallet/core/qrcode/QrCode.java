@@ -27,7 +27,7 @@ public class QrCode {
     @PastOrPresent(message = "QRcode generation date-time cannot be in the future")
     private LocalDateTime generatedAt;
 
-    @Valid
+
     @OneToOne
     @JoinColumn(name = "session_id", nullable = false)
     private Session session;
