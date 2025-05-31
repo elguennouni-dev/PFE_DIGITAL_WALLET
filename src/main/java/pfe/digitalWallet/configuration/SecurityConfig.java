@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/signup", "/auth/logout").permitAll()
+                        .requestMatchers("/auth/login", "/auth/signup", "/auth/logout", "/qr/init-session").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

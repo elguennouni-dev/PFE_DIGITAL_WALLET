@@ -17,14 +17,9 @@ public class QrCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "QRcode data cannot be Null")
-    @NotEmpty(message = "QRcode data cannot be Empty")
-    @NotBlank(message = "QRcode data cannot be Blank")
-    @Size(min = 2, message = "QRcode data must be at least 2 characters long")
+
     private String qrCodeData;
 
-    @NotNull(message = "QRcode generation date-time cannot be Null")
-    @PastOrPresent(message = "QRcode generation date-time cannot be in the future")
     private LocalDateTime generatedAt;
 
 

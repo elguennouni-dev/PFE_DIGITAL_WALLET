@@ -21,14 +21,11 @@ public class Session {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     private String sessionToken;
 
-    @NotNull(message = "Session creation date-time cannot be Null")
-    @PastOrPresent(message = "Session creation date-time cannot be in the future")
     private LocalDateTime createdAt;
 
-    @NotNull(message = "Session expiration date-time cannot be Null")
     private LocalDateTime expiresAt;
 
     @NotNull(message = "Session status cannot be Null")
@@ -36,12 +33,12 @@ public class Session {
     @Column(nullable = false)
     private SessionStatus sessionStatus;
 
-    @Valid
+
     @ManyToOne
     @JoinColumn(name = "app_user_id", nullable = false)
     private AppUser appUser;
 
-    @Valid
+
     @OneToOne(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
     private QrCode qrCode;
 }

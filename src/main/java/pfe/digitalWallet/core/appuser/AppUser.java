@@ -24,34 +24,19 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Username cannot be Null")
-    @NotEmpty(message = "Username cannot be Empty")
-    @NotBlank(message = "Username cannot be Blank")
-    @Size(min = 6, max = 20, message = "Username must be between 6 and 20 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Username must be alphanumeric")
+
     private String username;
 
-    @NotNull(message = "Password cannot be Null")
-    @NotEmpty(message = "Password cannot be Empty")
-    @NotBlank(message = "Password cannot be Blank")
-    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     private String password;
 
-    @NotNull(message = "Password cannot be Null")
-    @NotEmpty(message = "Password cannot be Empty")
-    @NotBlank(message = "Password cannot be Blank")
-    @Email(message = "Email should be valid")
     private String email;
 
-    @NotNull(message = "Creation date-time cannot be Null")
-    @PastOrPresent(message = "Creation date-time cannot be in the future")
     private LocalDateTime createdAt;
 
-    @NotNull(message = "Update date-time cannot be Null")
-    @PastOrPresent(message = "Update date-time cannot be in the future")
     private LocalDateTime updatedAt;
 
     private boolean isLocked;
+
     private LocalDateTime lockUntil;
 
     @Valid

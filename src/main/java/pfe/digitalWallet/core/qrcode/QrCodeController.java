@@ -16,9 +16,9 @@ public class QrCodeController {
         return ResponseEntity.ok(qrCodeService.initSession(seed));
     }
 
-    @PostMapping("/mobile/confirm-login")
-    public ResponseEntity<?> confirmLogin(@RequestBody String qrToken){
-        return ResponseEntity.ok(qrCodeService.confirmLogin(qrToken));
+    @PostMapping("/confirm-login")
+    public ResponseEntity<?> confirmLogin(@RequestBody String qrToken, @RequestBody String jwt){
+        return ResponseEntity.ok(qrCodeService.confirmLogin(qrToken, jwt));
     }
 
     @PostMapping("/web/poll-session")

@@ -13,4 +13,7 @@ public interface SessionRepo extends JpaRepository<Session, Long> {
     Optional<Session> findByAppUser_Username(String username);
     Optional<Session> findBySessionToken(String token);
 
+
+    Optional<Session> findByQrCodeId(Long id);
+
 }
