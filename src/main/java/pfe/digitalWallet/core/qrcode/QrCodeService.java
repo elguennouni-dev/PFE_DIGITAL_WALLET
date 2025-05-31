@@ -27,10 +27,10 @@ public class QrCodeService {
     @Autowired
     private final UserRepository userRepository;
 
-    public QrCodeDTO initSession(Integer seed) {
+    public QrCodeDTO initSession(String seed) {
 
             Session session = Session.builder()
-                    .sessionToken(String.valueOf(UUID.nameUUIDFromBytes(seed.toString().getBytes(StandardCharsets.UTF_8))))
+                    .sessionToken(String.valueOf(UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8))))
                     .createdAt(LocalDateTime.now())
                     .expiresAt(LocalDateTime.now().plusHours(1))
                     .sessionStatus(SessionStatus.PENDING)

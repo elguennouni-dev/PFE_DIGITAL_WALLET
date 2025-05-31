@@ -12,7 +12,7 @@ public class QrCodeController {
     private QrCodeService qrCodeService;
 
     @PostMapping("/init-session")
-    public ResponseEntity<?> initSession(@RequestBody Integer seed){
+    public ResponseEntity<?> initSession(@RequestBody String seed){
         return ResponseEntity.ok(qrCodeService.initSession(seed));
     }
 
