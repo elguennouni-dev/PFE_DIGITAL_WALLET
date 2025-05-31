@@ -29,13 +29,15 @@ public class QrCodeService {
 
     public QrCodeDTO initSession(String seed) {
 
-            Session session = Session.builder()
-                    .sessionToken(String.valueOf(UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8))))
-                    .createdAt(LocalDateTime.now())
-                    .expiresAt(LocalDateTime.now().plusHours(1))
-                    .sessionStatus(SessionStatus.PENDING)
-                    .appUser(null)
-                    .build();
+        UUID uuid = UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8));
+
+        Session session = Session.builder()
+                .sessionToken(uuid.toString())
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .sessionStatus(SessionStatus.PENDING)
+                .appUser(null)
+                .build();
 
             QrCode qrCode = QrCode.builder()
                     .qrCodeData(UUID.randomUUID().toString())
