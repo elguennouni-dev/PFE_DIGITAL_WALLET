@@ -32,7 +32,7 @@ public class QrCodeService {
         UUID uuid = UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8));
 
         Session session = Session.builder()
-                .sessionToken(uuid.toString())
+                .sessionToken(null)
                 .createdAt(LocalDateTime.now())
                 .expiresAt(LocalDateTime.now().plusHours(1))
                 .sessionStatus(SessionStatus.PENDING)
@@ -40,7 +40,7 @@ public class QrCodeService {
                 .build();
 
             QrCode qrCode = QrCode.builder()
-                    .qrCodeData(UUID.randomUUID().toString())
+                    .qrCodeData(uuid.toString())
                     .generatedAt(LocalDateTime.now())
                     .session(session)
                     .build();
