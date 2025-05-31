@@ -73,6 +73,19 @@ public class GlobalExceptionHandler {
         // Return the response with status 401
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Map<String, Object>> handleNotFoundException(NotFoundException ex) {
+
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("message", "Resource not found");
+        errorResponse.put("cause", ex.getMessage());
+        errorResponse.put("zonedatetime", ZonedDateTime.now().toString());
+        errorResponse.put("httpstatus", HttpStatus.NOT_FOUND.value());
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
 
 
     @ExceptionHandler({

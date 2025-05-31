@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "session")
 @Entity
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter @Setter
