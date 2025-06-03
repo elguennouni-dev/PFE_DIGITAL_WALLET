@@ -18,6 +18,7 @@ import pfe.digitalWallet.core.rsaKey.RSAKeyService;
 import pfe.digitalWallet.core.rsaKey.dto.RSAKeyDto;
 import pfe.digitalWallet.core.rsaKey.mapper.RSAKeyMapper;
 import pfe.digitalWallet.core.rsaKey.util.RSAUtil;
+import pfe.digitalWallet.shared.dto.LoginResponse;
 import pfe.digitalWallet.shared.dto.LogoutRequest;
 import pfe.digitalWallet.shared.dto.SignupRequest;
 import pfe.digitalWallet.shared.dto.SignupResponse;
@@ -56,71 +57,51 @@ public class AuthService {
     private RSAKeyMapper rsaKeyMapper;
 
 
-    // Handle login
-    public Optional<UserDto> login(LoginRequest request) {
-        LocalDateTime time = LocalDateTime.now();
-        Optional<AppUser> optionalUserDto = userService.getByUsername(request.username());
-        if(optionalUserDto.isEmpty()) {
-            System.out.println("User not found!");
+
+    public Optional<LoginResponse> login(LoginRequest request) {
+        LocalDateTime currentTime = LocalDateTime.now();
+        Objects.requireNonNull(request, "LoginRequest cannot be null");
+
+        Optional<AppUser> userOptional = userService.findByUsernameOrEmail(request.username());
+
+        if (userOptional.isEmpty()) {
+            logLoginHistory(request, null, currentTime, LoginStatus.FAILURE, "Login Failure");
             return Optional.empty();
         }
 
-        UserDto userDto = null;
-        AppUser userEntity = userMapper.toEntity(userDto);
-        LoginAttempt attempt = loginAttemptService.getByUser(userEntity);
+        AppUser appUser = userOptional.get();
+        UserDto userDto = userMapper.toDto(appUser);
 
-        // Check login attempts
-        if(attempt != null && attempt.getFailedAttempts() >= 5 && attempt.getLastFailedAttempt().isAfter(LocalDateTime.now().minusMinutes(15))) {
-            throw new IllegalArgumentException("Your account is locked due too many login attempts. Please tru again later.");
-        }
-
-        // Verify password
-        if(!passwordValidator.isValidPassword(request.password(), userDto.id())) {
-            logLoginAttempt(userEntity, time, AttemptStatus.FAILURE);
+        if (!passwordEncoder.matches(request.password(), appUser.getPassword())) {
+            logLoginHistory(request, appUser, currentTime, LoginStatus.FAILURE, "Login Failure");
             return Optional.empty();
         }
 
-        loginAttemptService.resetFailedAttempts(userEntity);
+        String token = jwtUtil.generateToken(userDto.username());
 
-        try {
-            String token = jwtUtil.generateToken(userDto.username());
-            UserDto updatedUser = userDto.withToken(token);
+        LoginResponse response = new LoginResponse(userDto.id(), userDto.username(), userDto.email(), token);
+        logLoginHistory(request,appUser,currentTime,LoginStatus.LOGGED_IN, "Login Success");
 
-            // Save login history and login attempt
-            logLoginHistory(request, userEntity, time, LoginStatus.LOGGED_IN);
-            logLoginAttempt(userEntity, time, AttemptStatus.SUCCESS);
-            return Optional.of(updatedUser);
-
-        } catch (Exception e) {
-            handleException("Error during token generation", e);
-            return Optional.empty();
-        }
+        return Optional.of(response);
     }
 
 
+
+    // SignUp
     @Transactional
     public Optional<SignupResponse> signup(SignupRequest request) {
-        System.out.println("Starting signup process for username: " + request.username());
+        Objects.requireNonNull(request, "SignupRequest cannot be null");
         LocalDateTime time = LocalDateTime.now();
 
-        // Enhanced user existence check with debug
-        System.out.println("Checking if username exists...");
-        Optional<AppUser> existingUser = userService.getByUsername(request.username());
-        if (existingUser.isPresent()) {
-            System.out.println("Username already exists: " + request.username());
+        if (userService.getByUsername(request.username()).isPresent()) {
             return Optional.empty();
         }
 
-        System.out.println("Checking if email exists...");
-        Optional<AppUser> existingEmail = userService.findByEmail(request.email());
-        if (existingEmail.isPresent()) {
-            System.out.println("Email already exists: " + request.email());
+        if (userService.findByEmail(request.email()).isPresent()) {
             return Optional.empty();
         }
 
         try {
-            // Create new user
-            System.out.println("Creating new user...");
             String encodedPassword = passwordEncoder.encode(request.password());
             AppUser appUser = new AppUser();
             appUser.setUsername(request.username());
@@ -128,81 +109,53 @@ public class AuthService {
             appUser.setCreatedAt(time);
             appUser.setUpdatedAt(time);
             appUser.setPassword(encodedPassword);
-            System.out.println("User object created with username: " + appUser.getUsername());
 
-            // Save user
-            System.out.println("Saving user...");
-            Optional<AppUser> savedUser = userService.save(appUser);
-            if (savedUser.isEmpty() || savedUser.get().getId() == null) {
-                System.out.println("Failed to save user or user ID is null");
-                return Optional.empty();
-            }
-            System.out.println("User saved with ID: " + savedUser.get().getId());
-
-            // Generate token
-            System.out.println("Generating JWT token...");
-            String token = jwtUtil.generateToken(request.username());
-
-            // Map to DTO
-            System.out.println("Mapping to DTO...");
-            UserDto userDto = userMapper.toDto(savedUser.get());
-            if (userDto == null) {
-                System.out.println("User DTO mapping failed");
-                return Optional.empty();
-            }
-
-            // Generate RSA keys
-            System.out.println("Generating RSA keys...");
             KeyPair keyPair = RSAUtil.generateKeyPair();
             String publicKey = RSAUtil.encodeKey(keyPair.getPublic());
             String privateKey = RSAUtil.encodeKey(keyPair.getPrivate());
 
-            // Save RSA keys
-            System.out.println("Saving RSA keys...");
             RSAKey rsaKey = new RSAKey();
-            rsaKey.setUser(savedUser.get());
             rsaKey.setPublicKey(publicKey);
             rsaKey.setPrivateKeyEncrypted(privateKey);
             rsaKey.setCreatedAt(time);
 
-            RSAKey savedRsaKey = rsaKeyService.save(rsaKey);
-            if (savedRsaKey == null) {
-                System.out.println("Failed to save RSA keys");
-                return Optional.empty();
-            }
+            rsaKey.setUser(appUser);
 
+            AppUser savedUser = userService.save(appUser)
+                    .orElseThrow(() -> new IllegalStateException("Failed to save user"));
+
+            RSAKey savedRsaKey = Optional.ofNullable(rsaKeyService.save(rsaKey))
+                    .orElseGet(() -> Optional.ofNullable(rsaKeyService.save(rsaKey))
+                            .orElseThrow(() -> new IllegalStateException("Failed to save RSA key after multiple attempts")));
+
+            String token = jwtUtil.generateToken(savedUser.getUsername());
+
+            UserDto userDto = userMapper.toDto(savedUser);
             RSAKeyDto rsaKeyDto = rsaKeyMapper.toRSAKeyDTO(savedRsaKey);
-            if (rsaKeyDto == null) {
-                System.out.println("RSAKey DTO mapping failed");
-                return Optional.empty();
+
+            if (userDto == null || rsaKeyDto == null) {
+                throw new IllegalStateException("DTO mapping failed");
             }
 
-            // Build response
-            System.out.println("Building response...");
-            SignupResponse signupResponse = new SignupResponse(
-                    Objects.requireNonNull(userDto.id(), "User ID cannot be null"),
-                    Objects.requireNonNull(userDto.username(), "Username cannot be null"),
-                    Objects.requireNonNull(userDto.email(), "Email cannot be null"),
+            return Optional.of(new SignupResponse(
+                    userDto.id(),
+                    userDto.username(),
+                    userDto.email(),
                     token,
-                    Objects.requireNonNull(userDto.createdAt(), "CreatedAt cannot be null"),
-                    Objects.requireNonNull(userDto.updatedAt(), "UpdatedAt cannot be null"),
+                    userDto.createdAt(),
+                    userDto.updatedAt(),
                     userDto.isLocked(),
-                    userDto.lockUntil(),
-                    Objects.requireNonNull(rsaKeyDto.publicKey(), "Public key cannot be null")
-            );
-
-            System.out.println("Signup successful for user: " + userDto.username());
-            return Optional.of(signupResponse);
+                    userDto.lockUntil()
+            ));
 
         } catch (Exception e) {
-            System.out.println("Signup failed with error: " + e.getMessage());
-            e.printStackTrace();
-            return Optional.empty();
+            throw new RuntimeException("Signup failed", e);
         }
     }
 
 
-    // Handle logput
+
+    // Logout
     public void logout(LogoutRequest request) {
         LocalDateTime time = LocalDateTime.now();
         String token = request.token();
@@ -226,13 +179,13 @@ public class AuthService {
         AppUser user = userMapper.toEntity(userDto);
 
         // Log logout history and blacklist token
-        logLogoutHistory(request, user, time, LoginStatus.LOGGED_OUT);
+        logLogoutHistory(request, user, time, LoginStatus.LOGGED_OUT, "Logged Out");
         jwtBlacklistService.blacklistToken(token);
 
     }
 
 
-    // Loggin functions
+    // Login functions
     private void logLoginAttempt(AppUser appUser, LocalDateTime time, AttemptStatus status) {
         try {
             LoginAttempt attempt = new LoginAttempt();
@@ -254,7 +207,7 @@ public class AuthService {
         }
     }
 
-    private void logLoginHistory(LoginRequest request, AppUser appUser, LocalDateTime time, LoginStatus status) {
+    private void logLoginHistory(LoginRequest request, AppUser appUser, LocalDateTime time, LoginStatus status, String reason) {
         try {
             LoginHistory history = new LoginHistory();
             history.setDevice(request.device());
@@ -262,13 +215,15 @@ public class AuthService {
             history.setAppUser(appUser);
             history.setDateTime(time);
             history.setLoginStatus(status);
+            history.setReason(reason);
+            history.setIpAddress(request.ipAddress());
             securityEventService.saveLoginHistory(history);
         } catch (Exception e) {
             handleException("Error during login history logging", e);
         }
     }
 
-    private void logLogoutHistory(LogoutRequest request, AppUser appUser, LocalDateTime time, LoginStatus status) {
+    private void logLogoutHistory(LogoutRequest request, AppUser appUser, LocalDateTime time, LoginStatus status, String reason) {
         try {
             LoginHistory history = new LoginHistory();
             history.setDevice(request.device());
@@ -276,6 +231,7 @@ public class AuthService {
             history.setAppUser(appUser);
             history.setDateTime(time);
             history.setLoginStatus(status);
+            history.setReason(reason);
             securityEventService.saveLogoutHistory(history);
         } catch (Exception e) {
             handleException("Error during logout history logging", e);

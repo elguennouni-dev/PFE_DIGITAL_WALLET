@@ -54,9 +54,7 @@ public class JwtUtil {
 
     // Extract claims
     private Optional<Claims> getClaimsFromToken(String token) {
-        if (token == null || !token.startsWith(BEARER_PREFIX))
-            return Optional.empty();
-
+        if (token == null) return Optional.empty();
         String strippedToken = stripBearerPrefix(token);
 
         try {
@@ -117,13 +115,13 @@ public class JwtUtil {
     }
 
     public boolean isValidToken(String token) {
-        return token != null && token.startsWith(BEARER_PREFIX);
+        try {
+            getClaimsFromToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
-
-
-
-
-    // Get id from token in future...
 
 
 }

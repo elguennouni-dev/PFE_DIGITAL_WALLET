@@ -20,7 +20,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest loginRequest) {
         try {
-            Optional<UserDto> userDtoOptional = authService.login(loginRequest);
+            Optional<LoginResponse> userDtoOptional = authService.login(loginRequest);
             return userDtoOptional.map(userDto -> buildResponse(true, "Login successful", userDto, HttpStatus.OK))
                     .orElseGet(() -> buildResponse(false, "Invalid username or password", null, HttpStatus.UNAUTHORIZED));
         } catch (Exception e) {

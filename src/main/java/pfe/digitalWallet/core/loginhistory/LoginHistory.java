@@ -17,29 +17,23 @@ public class LoginHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = true)
+    private String ipAddress;
+
 //    @NotNull(message = "Login History date-time cannot be Null")
     @PastOrPresent(message = "Login History date-time cannot be in the future")
     private LocalDateTime dateTime;
 
-    @NotNull(message = "device cannot be Null")
-    @NotEmpty(message = "device cannot be Empty")
-    @NotBlank(message = "device cannot be Blank")
-    @Size(min = 2, message = "device must be at least 2 characters long")
     private String device;
-
-    @NotNull(message = "location cannot be Null")
-    @NotEmpty(message = "location cannot be Empty")
-    @NotBlank(message = "location cannot be Blank")
-    @Size(min = 2, message = "location must be at least 2 characters long") // Suggested to send (No-location-found)
     private String location;
 
-    @NotNull(message = "Login status status cannot be Null")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginStatus loginStatus;
 
-    @Valid
+    private String reason;
+
     @ManyToOne
-    @JoinColumn(name = "app_user_id", nullable = false)
+    @JoinColumn(name = "app_user_id")
     private AppUser appUser;
 }

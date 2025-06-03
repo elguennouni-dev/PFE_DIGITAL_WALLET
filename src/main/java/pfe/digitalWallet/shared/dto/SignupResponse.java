@@ -10,6 +10,5 @@ public record SignupResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         boolean isLocked,
-        LocalDateTime lockUntil,
-        String publicKey
+        LocalDateTime lockUntil
 ) {}

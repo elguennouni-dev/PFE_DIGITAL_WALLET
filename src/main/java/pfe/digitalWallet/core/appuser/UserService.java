@@ -19,9 +19,13 @@ public class UserService {
     @Autowired
     private UserMapper userMapper;
 
-    public Optional<AppUser> login(String username, String password) {
-        AppUser user = appUserRepository.findByUsernameAndPassword(username,password);
-        return Optional.ofNullable(user);
+//    public Optional<AppUser> login(String username, String password) {
+//        AppUser user = appUserRepository.findByUsernameAndPassword(username,password);
+//        return Optional.ofNullable(user);
+//    }
+
+    public Optional<AppUser> findByUsernameOrEmail(String usernameOrEmail) {
+        return appUserRepository.findByUsernameOrEmail(usernameOrEmail);
     }
 
     public Optional<List<AppUser>> getAll() {
@@ -37,16 +41,8 @@ public class UserService {
 
     public Optional<AppUser> getByUsername(String username) {
 
-        System.out.println("Username for service : " + username);
-
         AppUser user = appUserRepository.findByUsername(username);
 
-        System.out.println(user.toString());
-
-//        if (user != null && user.getRsaKey() != null) {
-//            Hibernate.initialize(user.getRsaKey().getPrivateKeyEncrypted());
-//            Hibernate.initialize(user.getRsaKey().getPublicKey());
-//        }
         return Optional.ofNullable(user);
     }
 

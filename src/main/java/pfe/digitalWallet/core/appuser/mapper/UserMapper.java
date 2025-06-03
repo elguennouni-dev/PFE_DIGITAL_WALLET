@@ -9,7 +9,7 @@ import pfe.digitalWallet.core.appuser.dto.UserDto;
 @Mapper(componentModel = "spring")
 @Qualifier("coreMapper")
 public interface UserMapper {
-    @Mapping(target = "token", ignore = true)
+//    @Mapping(target = "token", ignore = true)
     UserDto toDto(AppUser user);
     AppUser toEntity(UserDto dto);
 }

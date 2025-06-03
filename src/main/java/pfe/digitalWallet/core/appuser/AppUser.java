@@ -1,5 +1,6 @@
 package pfe.digitalWallet.core.appuser;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -54,11 +55,5 @@ public class AppUser {
     @Valid
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LoginHistory> loginHistories = new ArrayList<>();
-
-
-    // RSA Key
-    @Valid
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private RSAKey rsaKey;
 
 }

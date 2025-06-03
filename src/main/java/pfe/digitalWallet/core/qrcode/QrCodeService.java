@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
+import pfe.digitalWallet.configuration.WebSocketConfig;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.core.appuser.UserRepository;
 import pfe.digitalWallet.core.appuser.dto.UserDto;
@@ -43,74 +44,75 @@ public class QrCodeService {
     @Autowired
     private final SessionMapper sessionMapper;
 
-    public QrCodeDTO initSession(String seed) {
+    @Autowired
+    private WebSocketConfig webSocketConfig;
 
-        UUID uuid = UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8));
 
+    public QrCode generateQrCode() {
         Session session = Session.builder()
-                .sessionToken(null)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusHours(1))
+                .sessionToken(UUID.randomUUID().toString())
                 .sessionStatus(SessionStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(5))
                 .appUser(null)
-                .build();
-
-            QrCode qrCode = QrCode.builder()
-                    .qrCodeData(uuid.toString())
-                    .generatedAt(LocalDateTime.now())
-                    .session(session)
-                    .build();
-
-            session.setQrCode(qrCode);
-
-            session = sessionRepo.save(session);
-
-            return QrCodeDTO.builder()
-                    .sessionId(session.getId())
-                    .qrToken(qrCode.getQrCodeData())
-                    .expiresAt(session.getExpiresAt())
-                    .build();
-    }
-
-
-
-
-    public QrConfirmationResponse confirmLogin(QrConfirmationDAO dao) {
-
-        QrCode qrCode = qrCodeRepo.findByQrCodeData(dao.getQrToken())
-                .orElseThrow(() -> new NotFoundException("QR code not found"));
-
-        Session session = sessionRepo.findByQrCodeId(qrCode.getId())
-                .orElseThrow(() -> new NotFoundException("Session not found"));
-
-        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Session expired");
-        }
-
-        String username = jwtUtil.getUsernameFromToken(dao.getJwt());
-        AppUser appUser = Optional.ofNullable(userRepo.findByUsername(username))
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        // Update session using a fluent builder-style update (see below)
-        session = Session.builder()
-                .appUser(appUser)
-                .sessionStatus(SessionStatus.AUTHENTICATED)
-                .sessionToken(dao.getJwt())
                 .build();
 
         sessionRepo.save(session);
 
-        return QrConfirmationResponse.builder()
-                .userDto(userMapper.toDto(appUser))
-                .sessionDto(sessionMapper.toDto(session))
+
+        QrCode qrCode = QrCode.builder()
+                .qrCodeData(UUID.randomUUID().toString())
+                .generatedAt(LocalDateTime.now())
+                .session(session)
                 .build();
+
+        qrCodeRepo.save(qrCode);
+
+        return qrCode;
+
     }
 
 
-    public Object pollSession(Long sessionId) {
-        return null;
+
+//    public void confirmQrCodeLogin(String qrCodeData, AppUser appUser) {
+//        QrCode qrCode = qrCodeRepo.findByQrCodeData(qrCodeData)
+//                .orElseThrow(() -> new RuntimeException("QR code not found"));
+//
+//        Session session = qrCode.getSession();
+//        session.setAppUser(appUser);
+//        session.setSessionStatus(SessionStatus.AUTHENTICATED);
+//
+//        sessionRepo.save(session);
+//    }
+
+    public void confirmQrCodeLogin(String qrCodeData, AppUser appUser) {
+        QrCode qrCode = qrCodeRepo.findByQrCodeData(qrCodeData)
+                .orElseThrow(() -> new RuntimeException("QR code not found"));
+
+        Session session = qrCode.getSession();
+        session.setAppUser(appUser);
+        session.setSessionStatus(SessionStatus.AUTHENTICATED);
+
+        sessionRepo.save(session);
+
+        String jwt = jwtUtil.generateToken(appUser.getUsername());
+        webSocketConfig.confirmQrSession(qrCodeData, jwt);
     }
 
-    public Object expire(Long sessionId) {
-        return null;
+
+
+
+    public Optional<String> getJwtIfAuthenticated(String qrCodeData) {
+        QrCode qrCode = qrCodeRepo.findByQrCodeData(qrCodeData)
+                .orElseThrow(() -> new RuntimeException("QR code not found"));
+
+        Session session = qrCode.getSession();
+
+        if (session.getSessionStatus() == SessionStatus.AUTHENTICATED && session.getAppUser() != null) {
+            return Optional.of(jwtUtil.generateToken(session.getAppUser().getUsername()));
+        }
+        return Optional.empty();
     }
+
+
 }
