@@ -2,45 +2,56 @@ package pfe.digitalWallet.core.document;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import pfe.digitalWallet.core.document.dao.DocumentUploadDAO;
+import pfe.digitalWallet.core.document.dao.DocumentUpdateRequest;
+import pfe.digitalWallet.core.document.dao.DocumentUploadRequest;
+import pfe.digitalWallet.core.document.dto.DocumentDto;
+import pfe.digitalWallet.core.document.dto.ExtendedDocumentDto;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api/documents")
+@RequestMapping("/documents")
 public class DocumentController {
 
     @Autowired
     private DocumentService documentService;
 
+    // Get all documents by user username
+    @GetMapping("/user/{username}")
+    public ResponseEntity<?> getAllDocuments(@PathVariable String username) {
+        return documentService.getAllDocumentsByUserId(username);
+    }
 
+    // Upload document
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadDocument(@Valid @ModelAttribute DocumentUploadDAO dao) throws Exception {
-        return ResponseEntity.ok(documentService.uploadDocument(dao));
+    public ResponseEntity<?> uploadDocument(@Valid @ModelAttribute DocumentUploadRequest request) {
+        return documentService.uploadDocument(request);
     }
 
-    @GetMapping
-    public ResponseEntity<?> getAllDocuments() {
-        return ResponseEntity.ok(documentService.getAllDocuments());
-    }
-
+    // Get decrypted document by id
     @GetMapping("/{id}")
-    public ResponseEntity<?> getDocumentById(@PathVariable Long id) {
-        return ResponseEntity.ok(documentService.getDocumentById(id));
+    public ResponseEntity<?> getDocumentById(@PathVariable Long id, @RequestParam String username) {
+        return documentService.getDocumentByID(id, username);
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateDocument(@PathVariable Long id, @Valid @ModelAttribute DocumentUploadDAO dao) throws Exception {
-        return ResponseEntity.ok(documentService.updateDocument(id, dao));
+    // Update document
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<?> updateDocument(@PathVariable Long id, @RequestBody DocumentUpdateRequest dao) {
+        return documentService.updateDocument(id,dao);
     }
 
+    // Delete document
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteDocument(@PathVariable Long id) {
-        return ResponseEntity.ok(documentService.deleteDocument(id));
+        return documentService.deleteDocument(id);
     }
+
+
 }
 

@@ -1,20 +1,22 @@
 package pfe.digitalWallet.core.document.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 import pfe.digitalWallet.core.document.Document;
-import pfe.digitalWallet.core.document.dao.DocumentUploadDAO;
+import pfe.digitalWallet.core.document.dao.DocumentUploadRequest;
+import pfe.digitalWallet.core.document.dto.DocumentDto;
+import pfe.digitalWallet.core.document.dto.ExtendedDocumentDto;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface DocumentMapper {
 
-    DocumentMapper INSTANCE = Mappers.getMapper(DocumentMapper.class);
+    // @Mapping(source = "id", target = "id")
+    DocumentDto toDto(Document document);
+    Document toEntity(DocumentDto dto);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "viewCount", constant = "0")
-    @Mapping(target = "downloadCount", constant = "0")
-    @Mapping(target = "documentFile", ignore = true)  // handle file bytes in service
-    @Mapping(target = "appUser", ignore = true)       // handle user entity in service
-    Document toEntity(DocumentUploadDAO dao);
+    ExtendedDocumentDto toExtendedDto(Document document);
+    Document toEntity(ExtendedDocumentDto extendedDto);
+
 }

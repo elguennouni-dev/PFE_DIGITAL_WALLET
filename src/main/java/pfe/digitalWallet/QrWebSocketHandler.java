@@ -23,6 +23,8 @@ public class QrWebSocketHandler extends TextWebSocketHandler {
         String qrCodeData = getQrCodeDataFromQuery(session.getUri());
         if (qrCodeData != null) {
             sessions.put(qrCodeData, session);
+        } else {
+            session.close(CloseStatus.BAD_DATA.withReason("Missing qrCodeData parameter"));
         }
     }
 
@@ -35,7 +37,8 @@ public class QrWebSocketHandler extends TextWebSocketHandler {
         WebSocketSession session = sessions.get(qrCodeData);
         if (session != null && session.isOpen()) {
             try {
-                session.sendMessage(new TextMessage(token));
+                String jsonMessage = String.format("{\"type\":\"token\", \"token\":\"%s\"}", token);
+                session.sendMessage(new TextMessage(jsonMessage));
             } catch (IOException e) {
                 e.printStackTrace();
             }

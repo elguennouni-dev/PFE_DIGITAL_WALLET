@@ -8,6 +8,9 @@ import java.util.Optional;
 
 @Repository
 public interface DocumentRepo extends JpaRepository<Document, Long> {
-    List<Document> findByAppUserId(Long appUserId);
-    List<Document> findAllByDocumentTitleContainingIgnoreCase(String title);
+
+    List<Document> findAllByAppUserId(Long id);
+
+    Optional<Document> findByAppUserId(Long userId);
+
 }

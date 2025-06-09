@@ -19,30 +19,35 @@ public class Document {
     @NotNull(message = "File name cannot be Null")
     @NotEmpty(message = "File name cannot be Empty")
     @NotBlank(message = "File name cannot be Blank")
-    @Size(min = 5, max = 32, message = "File name must be between 5 and 32 characters")
+    @Size(min = 1, max = 180, message = "File name must be between 1 and 180 characters")
     private String documentTitle;
+
+
+    private String fileType;
 
     @NotNull(message = "RSAKEY cannot be Null")
     @NotEmpty(message = "RSAKEY cannot be Empty")
     @NotBlank(message = "RSAKEY cannot be Blank")
-    @Size(min = 5, max = 55, message = "RSAKEY must be at least 10 to 55 characters")
+    @Size(min = 10, max = 512, message = "RSAKEY must be at least 10 to 55 characters")
     private String rsaKey;
 
     @NotNull(message = "Document creation date-time cannot be Null")
     @PastOrPresent(message = "Document creation date-time cannot be in the future")
     private LocalDateTime createdAt;
 
+//    @NotNull(message = "View count cannot be Null")
+//    @Size(min = 0, message = "View count cannot be less than 0")
     @NotNull(message = "View count cannot be Null")
-    @Size(min = 0, message = "View count cannot be less than 0")
+    @Min(value = 0, message = "View count cannot be less than 0")
     private Integer viewCount;
 
-    @NotNull(message = "View count cannot be Null")
-    @Size(min = 0, message = "View count cannot be less than 0")
+//    @NotNull(message = "View count cannot be Null")
+//    @Size(min = 0, message = "View count cannot be less than 0")
+    @NotNull(message = "Download count cannot be Null")
+    @Min(value = 0, message = "Download count cannot be less than 0")
     private Integer downloadCount;
 
-    @NotNull(message = "File cannot be null")
-    @Lob
-    @Column(columnDefinition = "BYTEA")
+    @Column(name = "document_file", nullable = false)
     private byte[] documentFile;
 
     @Valid

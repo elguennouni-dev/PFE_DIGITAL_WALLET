@@ -30,11 +30,8 @@ public class QrCodeController {
 
     @PostMapping("/scan")
     public ResponseEntity<?> scanQrCode(@RequestBody QrScanRequest request) {
-        AppUser user = userService.getByUsername(request.username()).orElse(null);
-        qrCodeService.confirmQrCodeLogin(request.qrCodeData(), user);
-        return ResponseEntity.ok().build();
+        return qrCodeService.confirmQrCodeLogin(request);
     }
-
 
     @GetMapping("/status/{qrCodeData}")
     public ResponseEntity<?> checkStatus(@PathVariable String qrCodeData) {

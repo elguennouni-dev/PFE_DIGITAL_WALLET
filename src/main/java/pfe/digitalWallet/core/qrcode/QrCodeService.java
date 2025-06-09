@@ -2,6 +2,8 @@ package pfe.digitalWallet.core.qrcode;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.configuration.WebSocketConfig;
@@ -12,6 +14,7 @@ import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 import pfe.digitalWallet.core.qrcode.dao.QrConfirmationDAO;
 import pfe.digitalWallet.core.qrcode.dto.QrCodeDTO;
 import pfe.digitalWallet.core.qrcode.dto.QrConfirmationResponse;
+import pfe.digitalWallet.core.qrcode.dto.QrScanRequest;
 import pfe.digitalWallet.core.qrcode.mapper.QrCodeMapper;
 import pfe.digitalWallet.core.session.Session;
 import pfe.digitalWallet.core.session.SessionRepo;
@@ -22,6 +25,7 @@ import pfe.digitalWallet.shared.enums.session.SessionStatus;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -85,18 +89,36 @@ public class QrCodeService {
 //        sessionRepo.save(session);
 //    }
 
-    public void confirmQrCodeLogin(String qrCodeData, AppUser appUser) {
-        QrCode qrCode = qrCodeRepo.findByQrCodeData(qrCodeData)
-                .orElseThrow(() -> new RuntimeException("QR code not found"));
+    public ResponseEntity<?> confirmQrCodeLogin(QrScanRequest request) {
+
+
+        AppUser user = userRepo.findByUsername(request.getUsername());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message","User not found or not authenticated"));
+        }
+
+        Optional<QrCode> qrCodeOptional = qrCodeRepo.findByQrCodeData(request.getQrCodeData());
+        if (qrCodeOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message","QR Code not found"));
+        }
+
+        QrCode qrCode = qrCodeOptional.get();
 
         Session session = qrCode.getSession();
-        session.setAppUser(appUser);
+        session.setAppUser(user);
         session.setSessionStatus(SessionStatus.AUTHENTICATED);
 
         sessionRepo.save(session);
 
-        String jwt = jwtUtil.generateToken(appUser.getUsername());
-        webSocketConfig.confirmQrSession(qrCodeData, jwt);
+        String jwt = jwtUtil.generateToken(user.getUsername());
+
+        System.out.println("Sending token over websocket for qrCodeData: " + request.getQrCodeData() + " token: " + jwt);
+        webSocketConfig.confirmQrSession(request.getQrCodeData(), jwt);
+
+        System.out.println("Confirm QR login called with qrCodeData=" + request.getQrCodeData() + " and user=" + user.getUsername());
+        return ResponseEntity.ok(Map.of("message","QR Code scanned successfully"));
     }
 
 

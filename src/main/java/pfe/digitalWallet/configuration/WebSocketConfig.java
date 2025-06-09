@@ -25,6 +25,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(qrWebSocketHandler, "/ws/qr")
-                .setAllowedOrigins("http://localhost:5500");
+                .setAllowedOrigins("http://localhost:3000");
     }
 }
