@@ -144,7 +144,7 @@ public class DocumentService {
                 documentDtoList.add(fullDto);
             }
 
-            return ResponseEntity.status(HttpStatus.FOUND).body(documentDtoList);
+            return ResponseEntity.ok(documentDtoList);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message","Error while getting documents: " + e.getMessage()));

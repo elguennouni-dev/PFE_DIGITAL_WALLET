@@ -1,26 +1,35 @@
 package pfe.digitalWallet.core.qrcode;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pfe.digitalWallet.auth.jwt.JwtUtil;
 import pfe.digitalWallet.core.appuser.AppUser;
 import pfe.digitalWallet.core.appuser.UserService;
 import pfe.digitalWallet.core.qrcode.dao.QrConfirmationDAO;
 import pfe.digitalWallet.core.qrcode.dto.QrScanRequest;
+import pfe.digitalWallet.exception.UnauthorizedException;
+import pfe.digitalWallet.shared.dto.LoginResponse;
 
 import java.util.Map;
 import java.util.Optional;
 
 
+@Slf4j
 @RestController
-@CrossOrigin(origins = "http://localhost:5500")
+//@CrossOrigin(origins = {
+//        "http://localhost:5500",
+//        "http://127.0.0.1:5500"
+//})
 @RequestMapping("/qr")
 public class QrCodeController {
     @Autowired
     private QrCodeService qrCodeService;
     @Autowired
     private UserService userService;
+    @Autowired private JwtUtil jwtUtil;
 
     @GetMapping("/create")
     public ResponseEntity<?> initSession(){
@@ -37,7 +46,15 @@ public class QrCodeController {
     public ResponseEntity<?> checkStatus(@PathVariable String qrCodeData) {
         Optional<String> jwt = qrCodeService.getJwtIfAuthenticated(qrCodeData);
         if (jwt.isPresent()) {
-            return ResponseEntity.ok(Map.of("token", jwt.get()));
+            AppUser user = userService.getByUsername(jwtUtil.getUsernameFromToken(jwt.get()))
+                    .orElseThrow(() -> new UnauthorizedException("JWT username not found"));
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(
+                    "id",Long.toString(user.getId()),
+                    "username",user.getUsername(),
+                    "email",user.getEmail(),
+                    "token",jwt.get())
+            ));
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

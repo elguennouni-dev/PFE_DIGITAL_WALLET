@@ -2,11 +2,16 @@ package pfe.digitalWallet;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import pfe.digitalWallet.auth.jwt.JwtUtil;
+import pfe.digitalWallet.core.appuser.AppUser;
+import pfe.digitalWallet.core.appuser.UserService;
+import pfe.digitalWallet.exception.UnauthorizedException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class QrWebSocketHandler extends TextWebSocketHandler {
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+
+    @Autowired private JwtUtil jwtUtil;
+    @Autowired private UserService userService;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -33,17 +41,39 @@ public class QrWebSocketHandler extends TextWebSocketHandler {
         sessions.values().remove(session);
     }
 
+//    public void sendToken(String qrCodeData, String token) {
+//        WebSocketSession session = sessions.get(qrCodeData);
+//        if (session != null && session.isOpen()) {
+//            try {
+//                String jsonMessage = String.format("{\"type\":\"token\", \"token\":\"%s\"}", token);
+//                session.sendMessage(new TextMessage(jsonMessage));
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+
     public void sendToken(String qrCodeData, String token) {
         WebSocketSession session = sessions.get(qrCodeData);
         if (session != null && session.isOpen()) {
             try {
-                String jsonMessage = String.format("{\"type\":\"token\", \"token\":\"%s\"}", token);
+                String username = jwtUtil.getUsernameFromToken(token);
+                AppUser user = userService.getByUsername(username)
+                        .orElseThrow(() -> new UnauthorizedException("JWT username not found"));
+                String jsonMessage = String.format(
+                        "{\"type\":\"token\", \"data\": {\"id\": \"%d\", \"username\": \"%s\", \"email\": \"%s\", \"token\": \"%s\"}}",
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        token
+                );
                 session.sendMessage(new TextMessage(jsonMessage));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) {

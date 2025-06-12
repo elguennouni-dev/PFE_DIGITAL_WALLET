@@ -14,7 +14,9 @@ import pfe.digitalWallet.core.document.dto.ExtendedDocumentDto;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:3000")
+//@CrossOrigin(origins = "http://localhost:3000")
+//@CrossOrigin(origins = "http://127.0.0.1:5500")
+@CrossOrigin
 @RestController
 @RequestMapping("/documents")
 public class DocumentController {
