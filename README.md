@@ -9,9 +9,9 @@ A secure and modern **digital wallet for personal documents** – built for the 
 
 ## 📸 Screenshots
 
-| Android Login (Secure) | Web QR Code Login | Dashboard |
-|------------------------|-------------------|-----------|
-| ![Android Login](screenshots/android-login.png) | ![QR Login](screenshots/web-qr-login.png) | ![Dashboard](screenshots/dashboard.png) |
+| Android Login (Secure)                          | Web QR Code Login                          | Dashboard                                       |
+|-------------------------------------------------|--------------------------------------------|-------------------------------------------------|
+| ![Android Login](screenshots/android/login.png) | ![QR Login](screenshots/QR-Code-Login.png) | ![Dashboard](screenshots/web-app-dashboard.png) |
 
 ---
 
