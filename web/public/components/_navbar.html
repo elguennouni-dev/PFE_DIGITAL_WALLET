@@ -1,0 +1,47 @@
+
+<header class="main-header">
+    <div class="header-left">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <i data-feather="zap"></i>
+          </div>
+          <span class="brand-name" data-i18n="SecureConnection">Secure Connection</span>
+        </div>
+      </div>
+    <div class="header-right">
+        <div class="header-right-top">
+            <div class="welcome-message">
+                <h1 data-i18n="welcome"><span id="userUsername"></span></h1>
+            </div>
+        </div>
+        <div class="header-right-bottom">
+            <div class="theme-switcher">
+                <button id="themeToggle" class="theme-btn" aria-label="Toggle theme">
+                    <i data-feather="moon" class="moon-icon"></i>
+                    <i data-feather="sun" class="sun-icon"></i>
+                </button>
+            </div>
+            <!-- <div class="lang-switcher">
+                <select id="langSwitcher" aria-label="Language selector">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="ar">العربية</option>
+                </select>
+            </div> -->
+            <div class="user-profile">
+                <span id="username-place"></span>
+                <button id="logoutBtn" class="logout-btn" aria-label="Logout"><i data-feather="log-out"></i></button>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<script>
+    const userUsername = document.getElementById('userUsername');
+
+    userUsername.textContent = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')).username : 'Guest';
+
+</script>
