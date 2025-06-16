@@ -19,17 +19,13 @@ public class JwtUtil {
     @Value("${jwt.expire.time}")
     private long EXPIRE_TIME;
 
-    // Repeated things ...
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String CLAIM_USERNAME = "username";
 
-
-    // Strip bearer prefix from token
     private String stripBearerPrefix(String token) {
         return token.replace(BEARER_PREFIX, "");
     }
 
-    // Generate key for jwt
     private Key getKey() {
         try {
             byte[] keyBytes = SECRET_KEY.getBytes();
@@ -39,7 +35,6 @@ public class JwtUtil {
         }
     }
 
-    // Token creation
     private String createToken(Map<String, Object> claimsMap, String username) {
         Date now = new Date(System.currentTimeMillis());
         Date expireDate = new Date(now.getTime() + EXPIRE_TIME);
@@ -52,7 +47,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Extract claims
     private Optional<Claims> getClaimsFromToken(String token) {
         if (token == null) return Optional.empty();
         String strippedToken = stripBearerPrefix(token);
@@ -71,8 +65,6 @@ public class JwtUtil {
     }
 
 
-
-    // Public main methods
     public String generateToken(String username) {
         Map<String, Object> claimsMap = new HashMap<>();
         claimsMap.put(CLAIM_USERNAME, username);

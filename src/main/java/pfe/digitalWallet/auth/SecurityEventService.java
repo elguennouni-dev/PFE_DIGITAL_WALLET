@@ -16,7 +16,6 @@ public class SecurityEventService {
     private LoginHistoryService loginHistoryService;
 
 
-    // Handle login attempts
     public void saveLoginAttempt(LoginAttempt attempt) {
         if (attempt == null || attempt.getAppUser() == null) {
             throw new IllegalArgumentException("Invalid LoginAttempt data");
@@ -24,7 +23,6 @@ public class SecurityEventService {
         this.loginAttemptService.save(attempt);
     }
 
-    // Handle login histories
     public void saveLoginHistory(LoginHistory history) {
         validateLoginHistory(history);
         try {
@@ -34,7 +32,6 @@ public class SecurityEventService {
         }
     }
 
-    // Handle logouts
     public void saveLogoutHistory(LoginHistory history) {
         validateLoginHistory(history);
         try {
@@ -44,7 +41,6 @@ public class SecurityEventService {
         }
     }
 
-    // Common validation for login and logout history
     private void validateLoginHistory(LoginHistory history) {
         if (history == null || history.getAppUser() == null || history.getLoginStatus() == null) {
             throw new IllegalArgumentException("Invalid LoginHistory data");

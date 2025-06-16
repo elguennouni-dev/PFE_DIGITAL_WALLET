@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pfe.digitalWallet.auth.jwt.JwtUtil;
+import pfe.digitalWallet.core.appuser.dto.UpdateUsernameRequest;
 import pfe.digitalWallet.core.appuser.dto.UserDto;
 import pfe.digitalWallet.core.appuser.mapper.UserMapper;
 
@@ -57,6 +58,13 @@ public class UserController {
                 .map(userMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+    }
+
+
+    @PostMapping("/updateUsername")
+    public ResponseEntity<String> updateUsername(@RequestBody UpdateUsernameRequest request) {
+        appUserService.updateUsername(request.getUserId(), request.getNewUsername());
+        return ResponseEntity.ok("Username updated successfully");
     }
 
 }

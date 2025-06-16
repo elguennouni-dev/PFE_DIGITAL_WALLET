@@ -18,7 +18,6 @@ public class LoginAttempt {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @NotNull(message = "Login attempt date-time cannot be Null")
     @PastOrPresent(message = "Login attempt date-time cannot be in the future")
     private LocalDateTime dateTime;
 

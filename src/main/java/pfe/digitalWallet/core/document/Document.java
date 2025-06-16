@@ -35,14 +35,10 @@ public class Document {
     @PastOrPresent(message = "Document creation date-time cannot be in the future")
     private LocalDateTime createdAt;
 
-//    @NotNull(message = "View count cannot be Null")
-//    @Size(min = 0, message = "View count cannot be less than 0")
     @NotNull(message = "View count cannot be Null")
     @Min(value = 0, message = "View count cannot be less than 0")
     private Integer viewCount;
 
-//    @NotNull(message = "View count cannot be Null")
-//    @Size(min = 0, message = "View count cannot be less than 0")
     @NotNull(message = "Download count cannot be Null")
     @Min(value = 0, message = "Download count cannot be less than 0")
     private Integer downloadCount;

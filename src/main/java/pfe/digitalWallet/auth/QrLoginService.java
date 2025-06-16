@@ -12,6 +12,4 @@ public class QrLoginService {
     @Autowired
     private QrWebSocketHandler qrWebSocketHandler;
 
-
-
 }

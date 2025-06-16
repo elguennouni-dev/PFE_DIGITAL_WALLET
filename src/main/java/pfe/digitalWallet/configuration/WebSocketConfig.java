@@ -25,6 +25,21 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(qrWebSocketHandler, "/ws/qr")
-                .setAllowedOrigins("http://localhost:3000");
+                .setAllowedOriginPatterns(
+                        "http://localhost:3000",
+                        "http://84.247.142.209:3000",
+                        "http*://aitoolsforteachers.site",
+                        "https://aitoolsforteachers.site"
+                );
+
     }
+//    @Override
+//    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+//        registry.addHandler(qrWebSocketHandler, "/ws/qr")
+//                .setAllowedOriginPatterns(
+//                        "http://localhost:3000",
+//                        "http://84.247.142.209:3000",
+//                        "http*://aitoolsforteachers.site"
+//                );
+//    }
 }

@@ -1,18 +1,31 @@
 package pfe.digitalWallet.core.loginattempt;
 
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import pfe.digitalWallet.core.appuser.AppUser;
+import pfe.digitalWallet.core.appuser.UserRepository;
+import pfe.digitalWallet.core.loginattempt.dto.LoginAttemptDto;
+import pfe.digitalWallet.core.loginattempt.mapper.LoginAttemptMapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LoginAttemptService {
 
     @Autowired
     private LoginAttemptRepo loginAttemptRepo;
+
+    @Autowired private LoginAttemptMapper loginAttemptMapper;
+
+    @Autowired private UserRepository userRepository;
 
     // Future Updates and Features:
     /*
@@ -75,6 +88,31 @@ public class LoginAttemptService {
 
     public void save(LoginAttempt loginAttempt) {
         loginAttemptRepo.save(loginAttempt);
+    }
+
+
+
+
+
+
+
+    // REAL REAL REAL FUNCTIONS
+    public ResponseEntity<?> getAllById(Long userId) {
+        if(userRepository.findById(userId).isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "No user found with this ID: " + userId));
+
+        List<LoginAttempt> loginAttemptList = loginAttemptRepo.findAllByAppUser_Username(userRepository.findById(userId).get().getUsername());
+
+        if(loginAttemptList.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "No login attempts at the moment"));
+
+        List<LoginAttemptDto> loginAttemptDtos = loginAttemptList.stream()
+                .map(loginAttemptMapper::toDto)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(loginAttemptDtos);
     }
 
 }

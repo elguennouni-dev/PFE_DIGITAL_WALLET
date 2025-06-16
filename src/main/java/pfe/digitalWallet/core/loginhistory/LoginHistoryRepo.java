@@ -13,4 +13,7 @@ public interface LoginHistoryRepo extends JpaRepository<LoginHistory, Long> {
     List<LoginHistory> findAllByAppUserIdOrderByDateTimeDesc(Long id);
     Optional<LoginHistory> findFirstByAppUserIdOrderByDateTimeDesc(Long id);
 
+    List<LoginHistory> findAllByAppUser_Username(String username);
+
+
 }

@@ -21,14 +21,14 @@ public class LoginHistoryController {
     private LoginHistoryMapper loginHistoryMapper;
 
 
-    @GetMapping("/user/id/{userId}/history")
-    public ResponseEntity<List<LoginHistoryDto>> getUserLoginHistory(@PathVariable Long userId) {
-        return ResponseEntity.ok(loginHistoryService.getAllByUserId(userId));
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserLoginHistory(@PathVariable Long userId) {
+        return loginHistoryService.getAllByUserId(userId);
     }
 
-    @GetMapping("/user/id/{userId}/last")
-    public ResponseEntity<LoginHistoryDto> getLastLoginAttempt(@PathVariable Long userId) {
-        return ResponseEntity.ok(loginHistoryMapper.toDto(loginHistoryService.findLastLoginHistory(userId)));
-    }
+//    @GetMapping("/user/id/{userId}/last")
+//    public ResponseEntity<LoginHistoryDto> getLastLoginAttempt(@PathVariable Long userId) {
+//        return ResponseEntity.ok(loginHistoryMapper.toDto(loginHistoryService.findLastLoginHistory(userId)));
+//    }
 
 }

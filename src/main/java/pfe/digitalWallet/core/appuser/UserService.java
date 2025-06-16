@@ -59,4 +59,9 @@ public class UserService {
         appUserRepository.deleteById(id);
     }
 
+
+    public void updateUsername(Long userId, String newUsername) {
+        appUserRepository.updateUsernameById(userId, newUsername);
+    }
+
 }

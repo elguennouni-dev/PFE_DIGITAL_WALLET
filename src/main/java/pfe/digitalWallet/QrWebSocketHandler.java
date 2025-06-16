@@ -1,7 +1,5 @@
 package pfe.digitalWallet;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -40,18 +38,6 @@ public class QrWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         sessions.values().remove(session);
     }
-
-//    public void sendToken(String qrCodeData, String token) {
-//        WebSocketSession session = sessions.get(qrCodeData);
-//        if (session != null && session.isOpen()) {
-//            try {
-//                String jsonMessage = String.format("{\"type\":\"token\", \"token\":\"%s\"}", token);
-//                session.sendMessage(new TextMessage(jsonMessage));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 
     public void sendToken(String qrCodeData, String token) {
         WebSocketSession session = sessions.get(qrCodeData);
@@ -93,20 +79,4 @@ public class QrWebSocketHandler extends TextWebSocketHandler {
         return null;
     }
 
-//    public void sendToken(String qrCodeData, String token) {
-//        WebSocketSession clientSession = sessions.get(qrCodeData);
-//        if (clientSession != null && clientSession.isOpen()) {
-//            try {
-//                clientSession.sendMessage(new TextMessage(token));
-//                clientSession.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-
-//    @Override
-//    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-//        sessions.values().removeIf(ws -> ws.equals(session));
-//    }
 }

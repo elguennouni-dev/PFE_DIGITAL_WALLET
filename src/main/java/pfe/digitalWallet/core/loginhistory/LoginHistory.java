@@ -20,7 +20,6 @@ public class LoginHistory {
     @Column(nullable = true)
     private String ipAddress;
 
-//    @NotNull(message = "Login History date-time cannot be Null")
     @PastOrPresent(message = "Login History date-time cannot be in the future")
     private LocalDateTime dateTime;
 

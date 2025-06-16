@@ -87,7 +87,6 @@ public class AuthService {
 
 
 
-    // SignUp
     @Transactional
     public Optional<SignupResponse> signup(SignupRequest request) {
         Objects.requireNonNull(request, "SignupRequest cannot be null");
@@ -154,8 +153,6 @@ public class AuthService {
     }
 
 
-
-    // Logout
     public void logout(LogoutRequest request) {
         LocalDateTime time = LocalDateTime.now();
         String token = request.token();
@@ -178,14 +175,12 @@ public class AuthService {
 
         AppUser user = userMapper.toEntity(userDto);
 
-        // Log logout history and blacklist token
         logLogoutHistory(request, user, time, LoginStatus.LOGGED_OUT, "Logged Out");
         jwtBlacklistService.blacklistToken(token);
 
     }
 
 
-    // Login functions
     private void logLoginAttempt(AppUser appUser, LocalDateTime time, AttemptStatus status) {
         try {
             LoginAttempt attempt = new LoginAttempt();
@@ -194,7 +189,6 @@ public class AuthService {
             attempt.setLoginStatus(status);
 
             if(status == AttemptStatus.FAILURE) {
-                // Increment failed attempts
                 attempt.setLastFailedAttempt(LocalDateTime.now());
                 loginAttemptService.incrementFailedAttempts(appUser);
             } else {
@@ -238,7 +232,6 @@ public class AuthService {
         }
     }
 
-    // Handle exceptions
     private void handleException(String message, Exception e) {
         e.printStackTrace();
         throw new RuntimeException(message, e);
