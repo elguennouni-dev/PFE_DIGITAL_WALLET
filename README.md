@@ -1,4 +1,4 @@
-# 📁 Digital Documents Wallet – PFE 2024/2025
+# Digital Documents Wallet – PFE 2024/2025
 
 A secure and modern **digital wallet for personal documents** – built for the **graduation project (PFE)** of *BTS Développement des Systèmes d'Information* 2024/2025.
 
